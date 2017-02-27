@@ -43,7 +43,7 @@ class LightBot(Plugin):
         print data
 
         isWootricBot = 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == self.wootricBotID
-        isJason = 'user' in data and data['user'] == 'U1DPW909F'
+        userImpersonatingBot = self.debug and 'user' in data and data['user'] in self.allowedLightControlUserIDs
 
         lightControlRegex = r"(?i)^lights?\s+(\w+.*)$"
 
@@ -60,10 +60,10 @@ class LightBot(Plugin):
                     self.processLightsCommand(lightCommand)
 
         # NPS scores
-        if isWootricBot or isJason:
+        if isWootricBot or userImpersonatingBot:
             pattern = re.compile(r"New NPS rating:\s+(\d+)")
 
-            if isJason:
+            if userImpersonatingBot:
                 match = pattern.match(data['text'])
             elif isWootricBot and 'attachments' in data:
                 match = pattern.match(data['attachments'][0]['text'])
