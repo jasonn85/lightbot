@@ -27,6 +27,7 @@ class LightBot(Plugin):
 
         self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS')
         self.allowedLightControlUserIDs = plugin_config.get('USERS')
+        self.wootricBotID = plugin_config.get('WOOTRIC_BOT')
 
         if not bridgeAddress:
             raise ValueError("Please add HUE_BRIDGE_ADDRESS under LightBot in your config file.")
@@ -41,7 +42,7 @@ class LightBot(Plugin):
 
         print data
 
-        isWootricBot = not self.debug and 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == 'B2AP72EUF'
+        isWootricBot = 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == self.wootricBotID
         isJason = 'user' in data and data['user'] == 'U1DPW909F'
 
         lightControlRegex = r"(?i)^lights?\s+(\w+.*)$"
