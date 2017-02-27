@@ -11,7 +11,7 @@ zingleXY = [0.1576, 0.2368]
 darkXY = [0.139, 0.081]
 
 # Which lights should be targeted if no light specifying parameter is provided?
-allLights = [3,4,5]
+allLights = [0]
 
 class LightBot(Plugin):
 
