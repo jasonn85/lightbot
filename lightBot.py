@@ -86,10 +86,6 @@ class LightBot(Plugin):
 
         command = match.group(3)
 
-        if command.lower() == 'test':
-            self.statusChangeTest(targetLights)
-            return
-
         if command.lower() == 'on':
             self.lightsOnOrOff(True, targetLights)
             return
@@ -239,24 +235,6 @@ class LightBot(Plugin):
 
         for light in lights:
             self.bridge.set_light(int(light), {'on': True, 'bri': brightness})
-
-    def statusChangeTest(self, lights):
-        startingStatus = {}
-
-        for light in lights:
-            state = self.bridge.get_light(light)['state']
-            del state['alert']
-
-            if state is not None:
-                startingStatus[light] = state
-
-            self.bridge.set_light(light, {'xy': darkXY, 'on': True, 'bri': 255})
-
-        time.sleep(2.0)
-
-        for light in lights:
-            self.bridge.set_light(light, startingStatus[light])
-
 
     def startColorLoop(self, lights):
         for i in lights:
