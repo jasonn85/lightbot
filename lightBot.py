@@ -10,13 +10,13 @@ outputs = []
 zingleXY = [0.1576, 0.2368]
 darkXY = [0.139, 0.081]
 
-# Which lights should be targeted if no light specifying parameter is provided?
-allLights = [0]
-
 class LightBot(Plugin):
 
     allowedLightControlChannelIDs = []
     allowedLightControlUserIDs = []
+
+    # Which lights should be targeted if no light specifying parameter is provided?
+    allLights = [0]
 
     looping = False
 
@@ -29,6 +29,11 @@ class LightBot(Plugin):
         self.allowedLightControlUserIDs = plugin_config.get('USERS')
         self.wootricBotID = plugin_config.get('WOOTRIC_BOT')
 
+        configLights = plugin_config.get('LIGHTS')
+
+        if configLights is not None:
+            self.allLights = configLights
+
         if not bridgeAddress:
             raise ValueError("Please add HUE_BRIDGE_ADDRESS under LightBot in your config file.")
 
@@ -38,7 +43,14 @@ class LightBot(Plugin):
         if self.debug:
             print self.bridge.get_api()
 
-    def process_message(self, data): 
+        if self.allLights == [0]:
+        # The magic 0 light ID does not work for most light settings we will use
+            lightsOnBridge = self.bridge.lights
+            self.allLights = []
+            for light in lightsOnBridge:
+                self.allLights.append(light.light_id)
+
+    def process_message(self, data):
 
         print data
 
@@ -82,7 +94,7 @@ class LightBot(Plugin):
         try:
             targetLights = match.group(1).split()
         except:
-            targetLights = allLights
+            targetLights = self.allLights
 
         command = match.group(3)
 
@@ -261,20 +273,11 @@ class LightBot(Plugin):
             self.lowRedPulse()
 
     def lightsOnOrOff(self, offOrOn, lights):
-
-        #TODO: Fix light toggling for light ID 0
-
         for light in lights:
             self.bridge.set_light(int(light), {'on' : offOrOn})
 
     def danceParty(self, lights):
         startingStatus = {}
-
-        if lights == [0]:
-            # This is the magical 0 light ID, meaning all lights.  Record all lights
-            lights = []
-            for light in self.bridge.lights:
-                lights.append(light.light_id)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
@@ -299,7 +302,7 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), startingStatus[light])
 
     def wigwag(self):
-        lights = allLights
+        lights = self.allLights
         startingStatus = {}
 
         if lights == [0]:
@@ -334,7 +337,7 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), startingStatus[light])
 
     def lowRedPulse(self):
-        lights = allLights
+        lights = self.allLights
         startingStatus = {}
 
         if lights == [0]:
@@ -377,7 +380,7 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), startingStatus[light])
 
     def blueWhirl(self):
-        lights = allLights
+        lights = self.allLights
         startingStatus = {}
 
         if lights == [0]:
