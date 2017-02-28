@@ -76,7 +76,7 @@ class LightBot(Plugin):
 
     def processLightsCommand(self, args):
 
-        pattern = re.compile(r"(?i)^((\d+\s+)+)?([\w]+[\s\w.]*%?)$")
+        pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
         match = pattern.match(args)
 
         try:
