@@ -57,7 +57,7 @@ class LightBot(Plugin):
         isWootricBot = 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == self.wootricBotID
         userImpersonatingBot = self.debug and 'user' in data and data['user'] in self.allowedLightControlUserIDs
 
-        lightControlRegex = r"(?i)^lights?\s+(\w+.*)$"
+        lightControlRegex = r"(?i)^lights?\s+(\S+.*)$"
 
         # Direct light control
         if self.messageAllowsLightControl(data):
