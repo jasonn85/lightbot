@@ -267,6 +267,12 @@ class LightBot(Plugin):
     def danceParty(self, lights):
         startingStatus = {}
 
+        if lights == [0]:
+            # This is the magical 0 light ID, meaning all lights.  Record all lights
+            lights = []
+            for light in self.bridge.lights:
+                lights.append(light.light_id)
+
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
             del state['alert']
@@ -292,6 +298,12 @@ class LightBot(Plugin):
     def wigwag(self):
         lights = allLights
         startingStatus = {}
+
+        if lights == [0]:
+            # This is the magical 0 light ID, meaning all lights.  Record all lights
+            lights = []
+            for light in self.bridge.lights:
+                lights.append(light.light_id)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
@@ -321,6 +333,12 @@ class LightBot(Plugin):
     def lowRedPulse(self):
         lights = allLights
         startingStatus = {}
+
+        if lights == [0]:
+            # This is the magical 0 light ID, meaning all lights.  Record all lights
+            lights = []
+            for light in self.bridge.lights:
+                lights.append(light.light_id)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
@@ -358,6 +376,12 @@ class LightBot(Plugin):
     def blueWhirl(self):
         lights = allLights
         startingStatus = {}
+
+        if lights == [0]:
+            # This is the magical 0 light ID, meaning all lights.  Record all lights
+            lights = []
+            for light in self.bridge.lights:
+                lights.append(light.light_id)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
