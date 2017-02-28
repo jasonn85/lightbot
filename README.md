@@ -15,6 +15,11 @@ Lightbot
 
 ## Configuration options
 
+### CHANNELS
+### USERS
+### WOOTRIC_BOT
+### LIGHTS
+
 ### Colors
 Options for colors accept strings in any of the following formats:
 * (CSS3 color name)[http://www.w3.org/TR/css3-color/#svg-color], such as "purple" or "sandybrown"
