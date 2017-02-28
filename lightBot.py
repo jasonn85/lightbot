@@ -261,6 +261,9 @@ class LightBot(Plugin):
             self.lowRedPulse()
 
     def lightsOnOrOff(self, offOrOn, lights):
+
+        #TODO: Fix light toggling for light ID 0
+
         for light in lights:
             self.bridge.set_light(int(light), {'on' : offOrOn})
 
