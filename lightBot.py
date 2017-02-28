@@ -3,7 +3,7 @@ from phue import Bridge
 import time
 import re
 import random
-from webcolors import name_to_rgb
+from webcolors import name_to_rgb, hex_to_rgb, rgb_percent_to_rgb
 
 outputs = []
 
@@ -110,22 +110,24 @@ class LightBot(Plugin):
 
         # Check for a color
         try:
-            rgb = name_to_rgb(command)
-            if rgb is not None:
-                self.colorChange(rgb, targetLights)
+            xy = self.xyFromColorString(command)
+
+            if xy is not None:
+                self.colorChange(xy, targetLights)
                 return
         except:
             pass
 
         # Check for brightness
-            pattern = re.compile(r"(?i)^bri(ghtness)?\s+(\d+(%?|(\.\d+)?))$")
-            match = pattern.match(command)
+        pattern = re.compile(r"(?i)^bri(ghtness)?\s+(\d+(%?|(\.\d+)?))$")
+        match = pattern.match(command)
 
-            if match is not None:
-                brightness = match.group(2)
+        if match is not None:
+            brightness = match.group(2)
 
-                if brightness is not None:
-                    self.brightnessChange(brightness, targetLights)
+            if brightness is not None:
+                self.brightnessChange(brightness, targetLights)
+                return
 
         # Check for a scene after updating Hue API
         sceneID = self.sceneIDMatchingString(command)
@@ -143,22 +145,81 @@ class LightBot(Plugin):
 
         return None
 
-    def colorChange(self, rgb, lights):
+    # Accepts colors in the format of a color name, XY values, RGB values, or hex RGB code.  Returns [X,Y] for use in the Philips Hue API
+    def xyFromColorString(self, string):
+        # Our regex patterns
+        hexPattern = re.compile(r"^#?(([A-Fa-f\d]{3}){1,2})$")
+        xyPattern = re.compile(r"^[[({]?\s*(\d+(\.\d+)?)[,\s]+(\d+(\.\d+)?)\s*[])}]?\s*$")
+        rgbIntegerPattern = re.compile(r"^[[({]?\s*(\d+)[,\s]+(\d+(\.\d+)?)[,\s]+(\d+)\s*[])}]?\s*$")
+        rgbPercentPattern = re.compile(r"^[[({]?\s*(\d+)%[,\s]+(\d+)%[,\s]+(\d+)%\s*[])}]?\s*$")
+
+        rgb = None
+        xy = None
+
+        try:
+            rgb = name_to_rgb(string)
+        except ValueError:
+            pass
+
+        if rgb is None:
+            # No name matched
+            match = hexPattern.match(string)
+
+            if match is not None:
+                try:
+                    rgb = hex_to_rgb("#" + match.group(1))
+                except ValueError:
+                    pass
+            else:
+                # No name, no hex
+                match = rgbPercentPattern.match(string)
+
+                if match is not None:
+                    r = int(match.group(1)) * 255 / 100
+                    g = int(match.group(2)) * 255 / 100
+                    b = int(match.group(3)) * 255 / 100
+
+                else:
+                    # No name, no hex, no RGB percent
+                    match = rgbIntegerPattern.match(string)
+
+                    if match is not None:
+                        r = int(match.group(1))
+                        g = int(match.group(2))
+                        b = int(match.group(4))
+
+                if match is not None:
+                    rgb = [r, g, b]
+                else:
+                    # No name, no hex, no RGB percent, no RGB integers
+                    match = xyPattern.match(string)
+
+                    if match is not None:
+                        xy = [float(match.group(1)), float(match.group(3))]
+
+        if xy is None and rgb is not None:
+            # We have RGB.  Convert to XY for Philips-ness.
+            xy = self.rgbToXY(rgb)
+
+        return xy
+
+    def rgbToXY(self, rgb):
         # Some magic number witchcraft to go from rgb 255 to Philips XY from http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
         red = rgb[0] / 255.0
         green = rgb[1] / 255.0
         blue = rgb[2] / 255.0
 
-        red = ((red + 0.055) / (1.0 + 0.055)**2.4) if (red > 0.04045) else (red / 12.92)
-        green = ((green + 0.055) / (1.0 + 0.055)**2.4) if (green > 0.04045) else (green / 12.92)
-        blue = ((blue + 0.055) / (1.0 + 0.055)**2.4) if (blue > 0.04045) else (blue / 12.92)
+        red = ((red + 0.055) / (1.0 + 0.055) ** 2.4) if (red > 0.04045) else (red / 12.92)
+        green = ((green + 0.055) / (1.0 + 0.055) ** 2.4) if (green > 0.04045) else (green / 12.92)
+        blue = ((blue + 0.055) / (1.0 + 0.055) ** 2.4) if (blue > 0.04045) else (blue / 12.92)
 
         X = red * 0.664511 + green * 0.154324 + blue * 0.162028
         Y = red * 0.283881 + green * 0.668433 + blue * 0.047685
         Z = red * 0.000088 + green * 0.072310 + blue * 0.986039
 
-        xy = [ X / (X + Y + Z), Y / (X + Y + Z) ]
+        return [X / (X + Y + Z), Y / (X + Y + Z)]
 
+    def colorChange(self, xy, lights):
         for light in lights:
             self.bridge.set_light(int(light), {'on': True, 'xy': xy})
 
