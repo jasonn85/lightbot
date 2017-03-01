@@ -423,7 +423,7 @@ class LightBot(Plugin):
 
         self.stopColorLoop(lights)
 
-        # Fake lights down to 0 from their current color (if they are on)
+        # Fade lights down to 0 from their current color (if they are on)
         for light in lights:
             self.bridge.set_light(int(light), {'bri': 0, 'transitiontime': pulseTime})
 
