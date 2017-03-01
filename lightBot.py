@@ -18,6 +18,8 @@ class LightBot(Plugin):
     # Which lights should be targeted if no light specifying parameter is provided?
     allLights = [0]
 
+    wigwagGroups = None
+
     looping = False
 
     def __init__(self, name=None, slack_client=None, plugin_config=None):
@@ -25,11 +27,11 @@ class LightBot(Plugin):
 
         bridgeAddress = plugin_config.get('HUE_BRIDGE_ADDRESS', None)
 
-        self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS')
-        self.allowedLightControlUserIDs = plugin_config.get('USERS')
-        self.wootricBotID = plugin_config.get('WOOTRIC_BOT')
+        self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS', None)
+        self.allowedLightControlUserIDs = plugin_config.get('USERS', None)
+        self.wootricBotID = plugin_config.get('WOOTRIC_BOT', None)
 
-        configLights = plugin_config.get('LIGHTS')
+        configLights = plugin_config.get('LIGHTS', None)
 
         if configLights is not None:
             self.allLights = configLights
@@ -43,12 +45,35 @@ class LightBot(Plugin):
         if self.debug:
             print self.bridge.get_api()
 
+        lightsOnBridge = self.bridge.lights
+
         if self.allLights == [0]:
         # The magic 0 light ID does not work for most light settings we will use
-            lightsOnBridge = self.bridge.lights
             self.allLights = []
             for light in lightsOnBridge:
                 self.allLights.append(light.light_id)
+
+        try:
+            configWigWagGroups = plugin_config.get('WIGWAG_GROUPS', None)
+
+            if len(configWigWagGroups) == 2 and len(configWigWagGroups[0]) > 0 and len(configWigWagGroups[1]):
+                self.wigwagGroups = configWigWagGroups
+        except:
+            pass
+
+        if self.wigwagGroups is None:
+            # We do not have configuration-specified wig wag groups.  Use all odd and even lights.
+            evenLights = []
+            oddLights = []
+
+            for light in lightsOnBridge:
+                if light.light_id % 2 == 0:
+                    evenLights.append(light.light_id)
+                else:
+                    oddLights.append(light.light_id)
+
+            self.wigwagGroups = [oddLights, evenLights]
+
 
     def process_message(self, data):
 
