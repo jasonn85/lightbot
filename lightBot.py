@@ -21,7 +21,7 @@ class LightBot(Plugin):
     allLights = [0]
 
     wigwagGroups = None
-    wigwagColors = [[0.1576, 0.2368], [0.139, 0.081]]
+    wigwagColor = [0.1576, 0.2368]
 
     looping = False
 
@@ -33,6 +33,7 @@ class LightBot(Plugin):
         self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS', None)
         self.allowedLightControlUserIDs = plugin_config.get('USERS', None)
         self.wootricBotID = plugin_config.get('WOOTRIC_BOT', None)
+        self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', self.wigwagColor))
 
         configLights = plugin_config.get('LIGHTS', None)
 
@@ -437,18 +438,18 @@ class LightBot(Plugin):
 
         # First phase
         for lightId in self.wigwagGroups[0]:
-            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[0], 'bri' : 154, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime})
         for lightId in self.wigwagGroups[1]:
-            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[1], 'bri' : 0, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime})
 
         # Delay before setting second phase
         time.sleep(secondsBetweenPhases)
 
         # Second phase
         for lightId in self.wigwagGroups[0]:
-            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[1], 'bri' : 0, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime})
         for lightId in self.wigwagGroups[1]:
-            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[0], 'bri' : 154, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime})
 
         # Restore original state
         for lightId in allWigwagLights:
