@@ -79,7 +79,7 @@ class LightBot(Plugin):
 
     def process_message(self, data):
 
-        print data
+        print dumps(data)
 
         isWootricBot = 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == self.wootricBotID
         userImpersonatingBot = self.debug and 'user' in data and data['user'] in self.allowedLightControlUserIDs
@@ -96,7 +96,7 @@ class LightBot(Plugin):
                 lightCommand = match.group(1)
 
                 if lightCommand != None:
-                    self.processLightsCommand(lightCommand)
+                    self.processLightsCommand(lightCommand, data)
 
         # NPS scores
         if isWootricBot or userImpersonatingBot:
@@ -113,7 +113,7 @@ class LightBot(Plugin):
                 if npsScore != None:
                     self.processNPSScore(npsScore)
 
-    def processLightsCommand(self, args):
+    def processLightsCommand(self, args, data=None):
 
         pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
         match = pattern.match(args)
@@ -125,11 +125,17 @@ class LightBot(Plugin):
 
         command = match.group(3)
 
+        if 'debug' in command.lower():
+            self.handleDebugCommand(args, data)
+            return
+
         if command.lower() == 'whirl':
             self.blueWhirl()
+            return
 
         if command.lower() == 'wigwag':
             self.wigwag()
+            return
 
         if command.lower() == 'on':
             self.lightsOnOrOff(True, targetLights)
@@ -176,6 +182,33 @@ class LightBot(Plugin):
         if sceneID != None:
             self.bridge.activate_scene(0, sceneID)
             return
+
+    def handleDebugCommand(self, command, incomingData=None):
+        if command == 'debug rules':
+            dataType = 'rules'
+            data = self.bridge.request('GET', '/api/' + self.bridge.username + '/rules')
+        elif command == 'debug schedules':
+            dataType = 'schedules'
+            data = self.bridge.get_schedule()
+        elif command == 'debug lights':
+            dataType = 'lights'
+            data = self.bridge.get_light()
+        elif command == 'debug sensors':
+            dataType = 'sensors'
+            data = self.bridge.get_sensor()
+        else:
+            dataType = 'bridge objects of all types'
+            data = self.bridge.get_api()
+
+        prettyDataString = dumps(data, sort_keys=True, indent=4, separators=(',',':'))
+
+        messageAttachments = [{
+            'fallback' : '%d %s:' % (len(data), dataType),
+            'title' : '%d %s:' % (len(data), dataType),
+            'text' : prettyDataString
+        }]
+
+        self.slack_client.api_call('chat.postMessage', channel=incomingData['channel'], attachments=messageAttachments, type='message')
 
     def sceneIDMatchingString(self, sceneName):
         name = sceneName.lower()
