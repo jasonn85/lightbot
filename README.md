@@ -19,6 +19,17 @@ Lightbot
 ### USERS
 ### WOOTRIC_BOT
 ### LIGHTS
+### WIGWAG_GROUPS
+Lights can be separated into two groups for wig wag animations:
+```YAML
+  - WIGWAG_GROUPS:
+    -
+	  - 1
+	  - 3
+	-
+	  - 2
+	  - 4
+```
 
 ### Colors
 Options for colors accept strings in any of the following formats:
