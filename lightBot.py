@@ -9,9 +9,6 @@ from json import dumps
 
 outputs = []
 
-zingleXY = [0.1576, 0.2368]
-darkXY = [0.139, 0.081]
-
 class LightBot(Plugin):
 
     allowedLightControlChannelIDs = []
@@ -22,6 +19,7 @@ class LightBot(Plugin):
 
     wigwagGroups = None
     wigwagColor = [0.1576, 0.2368]
+    whirlColor = [0.1576, 0.2368]
 
     looping = False
 
@@ -33,7 +31,8 @@ class LightBot(Plugin):
         self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS', None)
         self.allowedLightControlUserIDs = plugin_config.get('USERS', None)
         self.wootricBotID = plugin_config.get('WOOTRIC_BOT', None)
-        self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', self.wigwagColor))
+        self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(self.wigwagColor)))
+        self.whirlColor = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(self.whirlColor)))
 
         configLights = plugin_config.get('LIGHTS', None)
 
@@ -539,7 +538,7 @@ class LightBot(Plugin):
             offStates[lightId] = state
 
         for i in range(0,whirlCount):
-            onState = {'xy': zingleXY, 'bri':255, 'transitiontime': transitionTime}
+            onState = {'xy': self.whirlColor, 'bri':255, 'transitiontime': transitionTime}
 
             if i == 0:
                 # The first time through, we need to make sure we set 'on' to True if necessary
