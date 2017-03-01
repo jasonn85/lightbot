@@ -19,6 +19,7 @@ class LightBot(Plugin):
     allLights = [0]
 
     wigwagGroups = None
+    wigwagColors = [[0.1576, 0.2368], [0.139, 0.081]]
 
     looping = False
 
@@ -327,39 +328,53 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), startingStatus[light])
 
     def wigwag(self):
-        lights = self.allLights
         startingStatus = {}
+        allWigwagLights = self.wigwagGroups[0] + self.wigwagGroups[1]
+        transitionTime = 5
+        inOneSecond = 'PT00:00:01'
+        repeatCount = 5
+        secondsBetweenPhases = 1
+        everyTwoSeconds = 'R%02d/PT00:00:02' % repeatCount
+        afterItsOver = 'PT00:00:%02d' % ((repeatCount + 1) * secondsBetweenPhases * 2)
 
-        if lights == [0]:
-            # This is the magical 0 light ID, meaning all lights.  Record all lights
-            lights = []
-            for light in self.bridge.lights:
-                lights.append(light.light_id)
-
-        for light in lights:
+        for light in allWigwagLights:
             state = self.bridge.get_light(int(light))['state']
             del state['alert']
 
             if state is not None:
                 startingStatus[light] = state
 
-        self.stopColorLoop(lights)
+            if not state['on']:
+                self.bridge.create_schedule('turn%dOnBeforeWigwag' % lightId, inOneSecond, lightId, {'on' : True})
 
-        stepTime = 0.5
-        transitionTime = 5
+        self.stopColorLoop(allWigwagLights)
 
-        for i in range(0,10):
-            self.bridge.set_light(3, {'xy': zingleXY, 'bri': 154, 'on': True, 'transitiontime': transitionTime})
-            self.bridge.set_light(5, {'xy': zingleXY, 'bri': 154, 'on': True, 'transitiontime': transitionTime})
-            self.bridge.set_light(4, {'xy': darkXY, 'bri': 0,'on': True, 'transitiontime': transitionTime})
-            time.sleep(stepTime)
-            self.bridge.set_light(4, {'xy': zingleXY, 'bri': 154, 'on': True, 'transitiontime': transitionTime})
-            self.bridge.set_light(3, {'xy': darkXY, 'bri': 0, 'on': True, 'transitiontime': transitionTime})
-            self.bridge.set_light(5, {'xy': darkXY, 'bri': 0, 'on': True, 'transitiontime': transitionTime})
-            time.sleep(stepTime)
+        # Ensure all lights will be on
+        for lightId in allWigwagLights:
+            if not self.bridge.lights_by_id[lightId].on:
+                self.bridge.create_schedule('turn%dOnBeforeWigwag' % lightId, inOneSecond, lightId, {'on' : True})
 
-        for light in lights:
-            self.bridge.set_light(int(light), startingStatus[light])
+        # First phase
+        for lightId in self.wigwagGroups[0]:
+            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[0], 'bri' : 154, 'transitiontime' : transitionTime})
+        for lightId in self.wigwagGroups[1]:
+            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagGroups[1], 'bri' : 0, 'transitiontime' : transitionTime})
+
+        # Delay before setting second phase
+        time.sleep(secondsBetweenPhases)
+
+        # Second phase
+        for lightId in self.wigwagGroups[0]:
+            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[1], 'bri' : 0, 'transitiontime' : transitionTime})
+        for lightId in self.wigwagColors[1]:
+            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColors[0], 'bri' : 154, 'transitiontime' : transitionTime})
+
+        # Restore original state
+        for lightId in allWigwagLights:
+            self.bridge.create_schedule('wigwag-3-%d' % lightId, afterItsOver, lightId, startingStatus[lightId])
+
+        if self.debug:
+            print self.bridge.get_schedule()
 
     def lowRedPulse(self):
         lights = self.allLights
