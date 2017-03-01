@@ -353,6 +353,11 @@ class LightBot(Plugin):
 
     def danceParty(self, lights):
         startingStatus = {}
+        flashCount = 66
+        delayBetweenFlashes = 0.15
+        totalDuration = flashCount * delayBetweenFlashes
+
+        self.disableSchedulesForTime(totalDuration)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
@@ -363,12 +368,12 @@ class LightBot(Plugin):
         for i in lights:
             self.bridge.set_light(int(i), {'on': True})
 
-        for loopIndex in range(0,66):
+        for loopIndex in range(0,flashCount):
             for i in lights:
                 xy = [random.uniform(0.0, 1.0), random.uniform(0.0, 1.0)]
                 self.bridge.set_light(int(i), {'bri': 250, 'xy':xy, 'transitionTime' : 0, 'alert': 'select'})
 
-                time.sleep(0.15)
+                time.sleep(delayBetweenFlashes)
 
         for light in lights:
             self.bridge.set_light(int(light), startingStatus[light])
@@ -495,6 +500,8 @@ class LightBot(Plugin):
 
         totalSeconds = ((stepTime * 4) + timeBetweenWhirls) * whirlCount
         finishedTimestamp = 'PT00:00:%02d' % totalSeconds
+
+        self.disableSchedulesForTime(totalSeconds)
 
         # Return to original state after we're done
         for lightId in lights:
