@@ -79,7 +79,6 @@ class LightBot(Plugin):
 
 
     def process_message(self, data):
-
         print dumps(data)
 
         isWootricBot = 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == self.wootricBotID
@@ -115,7 +114,6 @@ class LightBot(Plugin):
                     self.processNPSScore(npsScore)
 
     def processLightsCommand(self, args, data=None):
-
         pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
         match = pattern.match(args)
 
@@ -328,7 +326,6 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), {'on': True, 'xy': xy})
 
     def brightnessChange(self, brightness, lights):
-
         if '%' in brightness:
             brightness = brightness.strip('%')
             brightness = float(brightness) / 100.0
@@ -559,4 +556,3 @@ class LightBot(Plugin):
             time.sleep(stepTime)
             self.bridge.set_light(5, offStates[5])
             time.sleep(timeBetweenWhirls)
-
