@@ -4,6 +4,7 @@ import time
 import re
 import random
 from webcolors import name_to_rgb, hex_to_rgb, rgb_percent_to_rgb
+from copy import deepcopy
 
 outputs = []
 
@@ -328,7 +329,7 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), startingStatus[light])
 
     def restorableStateForLight(self, lightObject):
-        state = {'bri' : lightObject['bri'], 'on' : lightObject['on'], 'colormode' : lightObject['colormode']}
+        state = {'bri' : lightObject['bri'], 'on' : lightObject['on'], 'colormode' : lightObject['colormode'], 'effect' : lightObject['effect']}
 
         if lightObject['colormode'] == 'hs':
             state['hue'] = lightObject['hue']
@@ -440,38 +441,53 @@ class LightBot(Plugin):
         lights = self.allLights
         startingStatus = {}
 
-        if lights == [0]:
-            # This is the magical 0 light ID, meaning all lights.  Record all lights
-            lights = []
-            for light in self.bridge.lights:
-                lights.append(light.light_id)
-
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
-            del state['alert']
 
             if state is not None:
-                startingStatus[light] = state
+                startingStatus[light] = self.restorableStateForLight(state)
 
-
-        stepTime = 0.025
+        stepTime = 0.075
+        timeBetweenWhirls = 0.5
         transitionTime = 1
+        whirlCount = 10
+
+        totalSeconds = ((stepTime * 4) + timeBetweenWhirls) * whirlCount
+        finishedTimestamp = 'PT00:00:%02d' % totalSeconds
 
         self.stopColorLoop(lights)
 
-        for i in range(0,10):
-            self.bridge.set_light(3, {'xy': zingleXY, 'on' : True, 'bri':255, 'transitiontime': transitionTime})
-            time.sleep(stepTime)
-            self.bridge.set_light(4, {'xy': zingleXY, 'on': True, 'bri': 255, 'transitiontime': transitionTime})
-            time.sleep(stepTime)
-            self.bridge.set_light(3, startingStatus[3])
-            self.bridge.set_light(5, {'xy': zingleXY, 'on': True, 'bri':255, 'transitiontime': transitionTime})
-            time.sleep(stepTime)
-            self.bridge.set_light(4, startingStatus[4])
-            time.sleep(stepTime)
-            self.bridge.set_light(5, startingStatus[5])
-            time.sleep(0.25)
+        # Return to original state after we're done
+        for lightId in lights:
+            self.bridge.create_schedule('restore%dAfterWhirl' % lightId, finishedTimestamp, lightId, startingStatus[lightId])
 
-        # Return to original state
-        for light in lights:
-            self.bridge.set_light(int(light), startingStatus[light])
+        # Build our 'off' states to go with the on state
+        offStates = {}
+
+        for lightId, status in startingStatus.iteritems():
+            state = deepcopy(status)
+            del state['on']
+            if not status['on']:
+                state['bri'] = 1
+
+            offStates[lightId] = state
+
+        for i in range(0,whirlCount):
+            onState = {'xy': zingleXY, 'bri':255, 'transitiontime': transitionTime}
+
+            if i == 0:
+                # The first time through, we need to make sure we set 'on' to True if necessary
+                onState['on'] = True
+
+            self.bridge.set_light(3, onState)
+            time.sleep(stepTime)
+            self.bridge.set_light(4, onState)
+            time.sleep(stepTime)
+            self.bridge.set_light(3, offStates[3])
+            self.bridge.set_light(5, onState)
+            time.sleep(stepTime)
+            self.bridge.set_light(4, offStates[4])
+            time.sleep(stepTime)
+            self.bridge.set_light(5, offStates[5])
+            time.sleep(timeBetweenWhirls)
+
