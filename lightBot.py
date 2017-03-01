@@ -46,7 +46,7 @@ class LightBot(Plugin):
         self.bridge.connect()
 
         if self.debug:
-            print self.bridge.get_api()
+            print dumps(self.bridge.get_api())
 
         lightsOnBridge = self.bridge.lights
 
@@ -55,7 +55,6 @@ class LightBot(Plugin):
             self.allLights = []
             for light in lightsOnBridge:
                 self.allLights.append(light.light_id)
-
         try:
             configWigWagGroups = plugin_config.get('WIGWAG_GROUPS', None)
 
