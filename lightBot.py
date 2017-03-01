@@ -125,6 +125,12 @@ class LightBot(Plugin):
 
         command = match.group(3)
 
+        if command.lower() == 'whirl':
+            self.blueWhirl()
+
+        if command.lower() == 'wigwag':
+            self.wigwag()
+
         if command.lower() == 'on':
             self.lightsOnOrOff(True, targetLights)
             return
