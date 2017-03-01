@@ -5,6 +5,7 @@ import re
 import random
 from webcolors import name_to_rgb, hex_to_rgb, rgb_percent_to_rgb
 from copy import deepcopy
+from json import dumps
 
 outputs = []
 
@@ -185,6 +186,35 @@ class LightBot(Plugin):
                 return id
 
         return None
+
+    # Disables all enabled schedules for the time period specified
+    def disableSchedulesForTime(self, seconds):
+        if seconds < 1:
+            seconds = 1
+
+        minutes = seconds / 60
+        seconds = seconds % 60
+        hours = minutes / 60
+        minutes = minutes % 60
+
+        timeString = 'PT%02d:%02d:%02d' % (hours, minutes, seconds)
+
+        allSchedules = self.bridge.get_schedule()
+
+        for scheduleID, schedule in allSchedules.iteritems():
+            if schedule['status'] == 'enabled':
+                reenableScheduleSchedule = {
+                    'name' : 'temporarilyDisableSchedule%s' % str(scheduleID),
+                    'time' : timeString,
+                    'command' : {
+                        'method' : 'PUT', 'address' : '/api/' + self.bridge.username + '/schedules/' + str(scheduleID), 'body' : {'status' : 'enabled'}
+                    }
+                }
+
+                result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/schedules/' + str(scheduleID), dumps({'status' : 'disabled'}))
+                self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(reenableScheduleSchedule))
+
+                print result
 
     # Accepts colors in the format of a color name, XY values, RGB values, or hex RGB code.  Returns [X,Y] for use in the Philips Hue API
     def xyFromColorString(self, string):
