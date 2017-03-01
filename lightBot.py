@@ -197,7 +197,7 @@ class LightBot(Plugin):
             'text' : prettyDataString
         }]
 
-        self.slack_client.api_call('chat.postMessage', channel=incomingData['channel'], attachments=messageAttachments, type='message')
+        self.slack_client.api_call('chat.postMessage', as_user=True, channel=incomingData['channel'], attachments=messageAttachments, type='message')
 
     def sceneIDMatchingString(self, sceneName):
         name = sceneName.lower()
