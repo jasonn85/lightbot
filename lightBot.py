@@ -327,6 +327,19 @@ class LightBot(Plugin):
         for light in lights:
             self.bridge.set_light(int(light), startingStatus[light])
 
+    def restorableStateForLight(self, lightObject):
+        state = {'bri' : lightObject['bri'], 'on' : lightObject['on'], 'colormode' : lightObject['colormode']}
+
+        if lightObject['colormode'] == 'hs':
+            state['hue'] = lightObject['hue']
+            state['sat'] = lightObject['sat']
+        elif lightObject['colormode'] == 'ct':
+            state['ct'] = lightObject['ct']
+        else:
+            state['xy'] = lightObject['xy']
+
+        return state
+
     def wigwag(self):
         startingStatus = {}
         allWigwagLights = self.wigwagGroups[0] + self.wigwagGroups[1]
