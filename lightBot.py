@@ -21,8 +21,6 @@ class LightBot(Plugin):
     wigwagColor = [0.1576, 0.2368]
     whirlColor = [0.1576, 0.2368]
 
-    looping = False
-
     def __init__(self, name=None, slack_client=None, plugin_config=None):
         super( LightBot, self ).__init__(name=name, slack_client=slack_client, plugin_config=plugin_config)
 
@@ -144,13 +142,6 @@ class LightBot(Plugin):
 
         if command.lower() == 'dance party':
             self.danceParty(targetLights)
-            return
-
-        if command.lower() == 'loop start':
-            self.startColorLoop(targetLights)
-            return
-        elif command.lower() == 'loop stop':
-            self.stopColorLoop(targetLights)
             return
 
         # Check for a color
@@ -340,14 +331,6 @@ class LightBot(Plugin):
         for light in lights:
             self.bridge.set_light(int(light), {'on': True, 'bri': brightness})
 
-    def startColorLoop(self, lights):
-        for i in lights:
-            self.bridge.set_light(int(i), {'effect' : 'colorloop'})
-
-    def stopColorLoop(self, lights):
-        for i in lights:
-            self.bridge.set_light(int(i), {'effect' : 'none'})
-
     def messageAllowsLightControl(self, data):
         # Is this person in one of our full control channels?
         if 'channel' in data and data['channel'] in self.allowedLightControlChannelIDs:
@@ -373,12 +356,9 @@ class LightBot(Plugin):
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
-            del state['alert']
 
             if state is not None:
-                startingStatus[light] = state
-
-        self.stopColorLoop(lights)
+                startingStatus[light] = self.restorableStateForLight(state)
 
         for i in lights:
             self.bridge.set_light(int(i), {'on': True})
@@ -424,8 +404,6 @@ class LightBot(Plugin):
 
             if not state['on']:
                 self.bridge.create_schedule('turn%dOnBeforeWigwag' % lightId, inOneSecond, lightId, {'on' : True})
-
-        self.stopColorLoop(allWigwagLights)
 
         # Ensure all lights will be on
         for lightId in allWigwagLights:
@@ -480,8 +458,6 @@ class LightBot(Plugin):
         pulseBri = 88
         pulseTime = 20
 
-        self.stopColorLoop(lights)
-
         # Fade lights down to 0 from their current color (if they are on)
         for light in lights:
             self.bridge.set_light(int(light), {'bri': 0, 'transitiontime': pulseTime})
@@ -519,8 +495,6 @@ class LightBot(Plugin):
 
         totalSeconds = ((stepTime * 4) + timeBetweenWhirls) * whirlCount
         finishedTimestamp = 'PT00:00:%02d' % totalSeconds
-
-        self.stopColorLoop(lights)
 
         # Return to original state after we're done
         for lightId in lights:
