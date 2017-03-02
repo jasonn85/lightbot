@@ -204,9 +204,9 @@ class LightBot(Plugin):
         prettyDataString = dumps(data, sort_keys=True, indent=4, separators=(',',':'))
 
         messageAttachments = [{
-            'fallback' : '%d %s:' % (len(data), dataType),
-            'title' : '%d %s:' % (len(data), dataType),
-            'text' : prettyDataString
+            'fallback': '%d %s:' % (len(data), dataType),
+            'title': '%d %s:' % (len(data), dataType),
+            'text': prettyDataString
         }]
 
         self.slack_client.api_call('chat.postMessage', as_user=True, channel=incomingData['channel'],
@@ -239,17 +239,17 @@ class LightBot(Plugin):
         for scheduleID, schedule in allSchedules.iteritems():
             if schedule['status'] == 'enabled':
                 reenableScheduleSchedule = {
-                    'name' : 'temporarilyDisableSchedule%s' % str(scheduleID),
-                    'time' : timeString,
-                    'command' : {
-                        'method' : 'PUT',
-                        'address' : '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
-                        'body' : {'status' : 'enabled'}
+                    'name': 'temporarilyDisableSchedule%s' % str(scheduleID),
+                    'time': timeString,
+                    'command': {
+                        'method': 'PUT',
+                        'address': '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
+                        'body': {'status': 'enabled'}
                     }
                 }
 
                 result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
-                                             dumps({'status' : 'disabled'}))
+                                             dumps({'status': 'disabled'}))
                 self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
                                     dumps(reenableScheduleSchedule))
 
@@ -441,11 +441,11 @@ class LightBot(Plugin):
         # First phase
         for lightId in self.wigwagGroups[0]:
             self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime
+                'xy': self.wigwagColor, 'bri': 154, 'transitiontime': transitionTime
             })
         for lightId in self.wigwagGroups[1]:
             self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime
+                'xy': self.wigwagColor, 'bri': 0, 'transitiontime': transitionTime
             })
 
         # Delay before setting second phase
@@ -454,11 +454,11 @@ class LightBot(Plugin):
         # Second phase
         for lightId in self.wigwagGroups[0]:
             self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime
+                'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime': transitionTime
             })
         for lightId in self.wigwagGroups[1]:
             self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime
+                'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime': transitionTime
             })
 
         # Restore original state
@@ -533,27 +533,27 @@ class LightBot(Plugin):
                 startingStatus[light] = restorableState
 
         lightsUpState = {
-            'bri' : pulseBri,
-            'xy' : self.slowPulseColor,
-            'transitiontime' : halfPulseDurationDeciseconds
+            'bri': pulseBri,
+            'xy': self.slowPulseColor,
+            'transitiontime': halfPulseDurationDeciseconds
         }
 
         lightsDownState = {
-            'bri' : 0,
-            'xy' : self.slowPulseColor,
-            'transitiontime' : halfPulseDurationDeciseconds
+            'bri': 0,
+            'xy': self.slowPulseColor,
+            'transitiontime': halfPulseDurationDeciseconds
         }
 
         pulsationStatusSensor = {
-            'name' : 'PulsationStatusSensor',
-            'uniqueid' : 'PulsationStatusSensor',
-            'type' : 'CLIPGenericStatus',
-            'swversion' : '1.0',
-            'state' : {
-                'status' : 0
+            'name': 'PulsationStatusSensor',
+            'uniqueid': 'PulsationStatusSensor',
+            'type': 'CLIPGenericStatus',
+            'swversion': '1.0',
+            'state': {
+                'status': 0
             },
-            'manufacturername' : 'jasonneel',
-            'modelid' : 'PulsationStatusSensor'
+            'manufacturername': 'jasonneel',
+            'modelid': 'PulsationStatusSensor'
         }
 
         # Create the sensors used for status (replacing it if it already exists with the same uniqueid)
@@ -563,29 +563,29 @@ class LightBot(Plugin):
 
         # Schedules
         goingUpSchedule = {
-            'name' : 'Pulsation going up',
-            'time' : halfPulseScheduleTime,
-            'autodelete' : False,
-            'status' : 'disabled',
-            'command' : {
-                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
-                'method' : 'PUT',
-                'body' : {
-                    'status' : 2
+            'name': 'Pulsation going up',
+            'time': halfPulseScheduleTime,
+            'autodelete': False,
+            'status': 'disabled',
+            'command': {
+                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'method': 'PUT',
+                'body': {
+                    'status': 2
                 }
             }
         }
 
         goingDownSchedule = {
-            'name' : 'Pulsation going down',
-            'time' : halfPulseScheduleTime,
-            'autodelete' : False,
-            'status' : 'disabled',
-            'command' : {
-                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
-                'method' : 'PUT',
-                'body' : {
-                    'status' : 1
+            'name': 'Pulsation going down',
+            'time': halfPulseScheduleTime,
+            'autodelete': False,
+            'status': 'disabled',
+            'command': {
+                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'method': 'PUT',
+                'body': {
+                    'status': 1
                 }
             }
         }
@@ -599,46 +599,46 @@ class LightBot(Plugin):
 
         # Create the two rules for going up and down
         startGoingUpRule = {
-            'name' : 'Pulsation at bottom',
-            'conditions' : [
+            'name': 'Pulsation at bottom',
+            'conditions': [
                 {
-                    'address' : pulsationStateAddress + '/status',
-                    'operator' : 'eq',
-                    'value' : '1'
+                    'address': pulsationStateAddress + '/status',
+                    'operator': 'eq',
+                    'value': '1'
                 },
                 {
-                    'address' : pulsationStateAddress + '/lastupdated',
-                    'operator' : 'dx'
+                    'address': pulsationStateAddress + '/lastupdated',
+                    'operator': 'dx'
                 }
             ],
-            'actions' : [
+            'actions': [
                 {
-                    'address' : '/schedules/' + str(goingUpScheduleID),
-                    'method' : 'PUT',
-                    'body' : {'status' : 'enabled'}
+                    'address': '/schedules/' + str(goingUpScheduleID),
+                    'method': 'PUT',
+                    'body': {'status': 'enabled'}
                 },
                 {
-                    'address' : '/schedules/' + str(goingDownScheduleID),
-                    'method' : 'PUT',
-                    'body' : {'status' : 'disabled'}
+                    'address': '/schedules/' + str(goingDownScheduleID),
+                    'method': 'PUT',
+                    'body': {'status': 'disabled'}
                 }
             ]
         }
 
         startGoingDownRule = {
-            'name' : 'Pulsation at top',
-            'conditions' : [
+            'name': 'Pulsation at top',
+            'conditions': [
                 {
-                    'address' : pulsationStateAddress + '/status',
-                    'operator' : 'eq',
-                    'value' : '2'
+                    'address': pulsationStateAddress + '/status',
+                    'operator': 'eq',
+                    'value': '2'
                 },
                 {
-                    'address' : pulsationStateAddress + '/lastupdated',
-                    'operator' : 'dx'
+                    'address': pulsationStateAddress + '/lastupdated',
+                    'operator': 'dx'
                 }
             ],
-            'actions' : [
+            'actions': [
                 {
                     'address': '/schedules/' + str(goingUpScheduleID),
                     'method': 'PUT',
@@ -661,8 +661,8 @@ class LightBot(Plugin):
                     'value': '3'
                 },
                 {
-                    'address' : pulsationStateAddress + '/lastupdated',
-                    'operator' : 'dx'
+                    'address': pulsationStateAddress + '/lastupdated',
+                    'operator': 'dx'
                 }
             ],
             'actions': []
@@ -672,19 +672,19 @@ class LightBot(Plugin):
         for lightID in lights:
             lightAddress = '/lights/' + str(lightID) + '/state'
             startGoingUpRule['actions'].append({
-                'address' : lightAddress,
-                'method' : 'PUT',
-                'body' : lightsUpState
+                'address': lightAddress,
+                'method': 'PUT',
+                'body': lightsUpState
             })
             startGoingDownRule['actions'].append({
-                'address' : lightAddress,
-                'method' : 'PUT',
-                'body' : lightsDownState
+                'address': lightAddress,
+                'method': 'PUT',
+                'body': lightsDownState
             })
             originalLightStateRule['actions'].append({
-                'address' : lightAddress,
-                'method' : 'PUT',
-                'body' : startingStatus[lightID]
+                'address': lightAddress,
+                'method': 'PUT',
+                'body': startingStatus[lightID]
             })
 
         goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
@@ -697,37 +697,37 @@ class LightBot(Plugin):
                                      dumps(originalLightStateRule))
 
         cleanupRule = {
-            'name' : 'Pulsation clean up',
-            'conditions' : [
+            'name': 'Pulsation clean up',
+            'conditions': [
                 {
                     'address': pulsationStateAddress + '/status',
                     'operator': 'eq',
                     'value': '3'
                 },
                 {
-                    'address' : pulsationStateAddress + '/lastupdated',
-                    'operator' : 'dx'
+                    'address': pulsationStateAddress + '/lastupdated',
+                    'operator': 'dx'
                 }
             ],
-            'actions' : [
+            'actions': [
                 {
-                    'address' : '/rules/' + str(goingUpRuleID),
-                    'method' : 'PUT',
-                    'body' : {'status' : 'disabled'}
-                },
-                {
-                    'address' : '/rules/' + str(goingDownRuleID),
-                    'method' : 'PUT',
+                    'address': '/rules/' + str(goingUpRuleID),
+                    'method': 'PUT',
                     'body': {'status': 'disabled'}
                 },
                 {
-                    'address' : '/schedules/' + str(goingUpScheduleID),
-                    'method' : 'PUT',
+                    'address': '/rules/' + str(goingDownRuleID),
+                    'method': 'PUT',
                     'body': {'status': 'disabled'}
                 },
                 {
-                    'address' : '/schedules/' + str(goingDownScheduleID),
-                    'method' : 'PUT',
+                    'address': '/schedules/' + str(goingUpScheduleID),
+                    'method': 'PUT',
+                    'body': {'status': 'disabled'}
+                },
+                {
+                    'address': '/schedules/' + str(goingDownScheduleID),
+                    'method': 'PUT',
                     'body': {'status': 'disabled'}
                 }
             ]
@@ -737,13 +737,13 @@ class LightBot(Plugin):
 
         # The schedule that stops the constant
         cleanupSchedule = {
-            'name' : 'Pulsation clean up',
-            'time' : totalDurationScheduleTime,
-            'command' : {
-                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
-                'method' : 'PUT',
-                'body' : {
-                    'status' : 3
+            'name': 'Pulsation clean up',
+            'time': totalDurationScheduleTime,
+            'command': {
+                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'method': 'PUT',
+                'body': {
+                    'status': 3
                 }
             }
         }
@@ -752,8 +752,8 @@ class LightBot(Plugin):
 
         # First fade them all down to nothing
         lightsTotallyOff = {
-            'bri' : 0,
-            'transitiontime' : originalFadeDurationDeciseconds
+            'bri': 0,
+            'transitiontime': originalFadeDurationDeciseconds
         }
         for lightID in lights:
             light = self.bridge.lights_by_id[lightID]
@@ -763,13 +763,13 @@ class LightBot(Plugin):
 
         # Start the pulsation once that is done
         beginSchedule = {
-            'name' : 'Pulsation begin',
-            'time' : originalFadeScheduleTime,
-            'command' : {
-                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
-                'method' : 'PUT',
-                'body' : {
-                    'status' : 1
+            'name': 'Pulsation begin',
+            'time': originalFadeScheduleTime,
+            'command': {
+                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'method': 'PUT',
+                'body': {
+                    'status': 1
                 }
             }
         }
@@ -813,7 +813,7 @@ class LightBot(Plugin):
             offStates[lightId] = state
 
         for i in range(0,whirlCount):
-            onState = {'xy': self.whirlColor, 'bri':255, 'transitiontime': transitionTime}
+            onState = {'xy': self.whirlColor, 'bri': 255, 'transitiontime': transitionTime}
 
             if i == 0:
                 # The first time through, we need to make sure we set 'on' to True if necessary
