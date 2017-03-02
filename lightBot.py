@@ -213,9 +213,9 @@ class LightBot(Plugin):
     def sceneIDMatchingString(self, sceneName):
         name = sceneName.lower()
 
-        for id, scene in self.bridge.get_scene().iteritems():
+        for sceneID, scene in self.bridge.get_scene().iteritems():
             if scene['name'].lower() == name:
-                return id
+                return sceneID
 
         return None
 
