@@ -15,126 +15,126 @@ DEFAULT_SLOW_PULSE_COLOR = [0.7, 0.2986]
 
 outputs = []
 
-class LightBot(Plugin):
 
-    allowedLightControlChannelIDs = []
-    allowedLightControlUserIDs = []
+class LightBot(Plugin):
+    allowed_light_control_channel_i_ds = []
+    allowed_light_control_user_i_ds = []
 
     # Which lights should be targeted if no light specifying parameter is provided?
-    allLights = [0]
+    all_lights = [0]
 
     def __init__(self, name=None, slack_client=None, plugin_config=None):
-        super( LightBot, self ).__init__(name=name, slack_client=slack_client, plugin_config=plugin_config)
+        super(LightBot, self).__init__(name=name, slack_client=slack_client, plugin_config=plugin_config)
 
-        bridgeAddress = plugin_config.get('HUE_BRIDGE_ADDRESS', None)
+        bridge_address = plugin_config.get('HUE_BRIDGE_ADDRESS', None)
 
-        self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS', None)
-        self.allowedLightControlUserIDs = plugin_config.get('USERS', None)
-        self.wootricBotID = plugin_config.get('WOOTRIC_BOT', None)
-        self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(DEFAULT_WIGWAG_COLOR)))
-        self.whirlColor = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(DEFAULT_WHIRL_COLOR)))
-        self.slowPulseColor = self.xyFromColorString(
+        self.allowed_light_control_channel_ids = plugin_config.get('CHANNELS', None)
+        self.allowed_light_control_user_ids = plugin_config.get('USERS', None)
+        self.wootric_bot_id = plugin_config.get('WOOTRIC_BOT', None)
+        self.wigwag_color = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(DEFAULT_WIGWAG_COLOR)))
+        self.whirl_color = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(DEFAULT_WHIRL_COLOR)))
+        self.slow_pulse_color = self.xyFromColorString(
             plugin_config.get('SLOW_PULSE_COLOR', str(DEFAULT_SLOW_PULSE_COLOR)))
-        self.slowPulseLights = plugin_config.get('SLOW_PULSE_LIGHTS', None)
+        self.slow_pulse_lights = plugin_config.get('SLOW_PULSE_LIGHTS', None)
 
-        configLights = plugin_config.get('LIGHTS', None)
+        config_lights = plugin_config.get('LIGHTS', None)
 
-        if configLights is not None:
-            self.allLights = configLights
+        if config_lights is not None:
+            self.all_lights = config_lights
 
-        if not bridgeAddress:
+        if not bridge_address:
             raise ValueError("Please add HUE_BRIDGE_ADDRESS under LightBot in your config file.")
 
-        self.bridge = Bridge(bridgeAddress)
+        self.bridge = Bridge(bridge_address)
         self.bridge.connect()
 
         if self.debug:
             print dumps(self.bridge.get_api())
 
-        lightsOnBridge = self.bridge.lights
+        lights_on_bridge = self.bridge.lights
 
-        if self.allLights == [0]:
+        if self.all_lights == [0]:
             # The magic 0 light ID does not work for most light settings we will use
-            self.allLights = []
-            for light in lightsOnBridge:
-                self.allLights.append(light.light_id)
+            self.all_lights = []
+            for light in lights_on_bridge:
+                self.all_lights.append(light.light_id)
         try:
-            configWigWagGroups = plugin_config.get('WIGWAG_GROUPS', None)
+            config_wig_wag_groups = plugin_config.get('WIGWAG_GROUPS', None)
 
-            if len(configWigWagGroups) == 2 and len(configWigWagGroups[0]) > 0 and len(configWigWagGroups[1]):
-                self.wigwagGroups = configWigWagGroups
+            if len(config_wig_wag_groups) == 2 and len(config_wig_wag_groups[0]) > 0 and len(config_wig_wag_groups[1]):
+                self.wigwag_groups = config_wig_wag_groups
         except:
             pass
 
-        if self.slowPulseLights is None:
-            self.slowPulseLights = self.allLights
+        if self.slow_pulse_lights is None:
+            self.slow_pulse_lights = self.all_lights
 
-        if self.wigwagGroups is None:
+        if self.wigwag_groups is None:
             # We do not have configuration-specified wig wag groups.  Use all odd and even lights.
-            evenLights = []
-            oddLights = []
+            even_lights = []
+            odd_lights = []
 
-            for light in lightsOnBridge:
+            for light in lights_on_bridge:
                 if light.light_id % 2 == 0:
-                    evenLights.append(light.light_id)
+                    even_lights.append(light.light_id)
                 else:
-                    oddLights.append(light.light_id)
+                    odd_lights.append(light.light_id)
 
-            self.wigwagGroups = [oddLights, evenLights]
+            self.wigwag_groups = [odd_lights, even_lights]
 
     def process_message(self, data):
         print dumps(data)
 
-        isWootricBot = ('subtype' in data and data['subtype'] == 'bot_message'
-                        and 'bot_id' in data and data['bot_id'] == self.wootricBotID)
-        userImpersonatingBot = self.debug and 'user' in data and data['user'] in self.allowedLightControlUserIDs
+        is_wootric_bot = ('subtype' in data and data['subtype'] == 'bot_message'
+                        and 'bot_id' in data and data['bot_id'] == self.wootric_bot_id)
+        user_impersonating_bot = self.debug and 'user' in data and data['user'] in self.allowed_light_control_user_ids
 
-        lightControlRegex = r"(?i)^lights?\s+(\S+.*)$"
+        light_control_regex = r"(?i)^lights?\s+(\S+.*)$"
 
         # Direct light control
-        if self.messageAllowsLightControl(data):
+        if self.message_allows_light_control(data):
             # Match any command beginning with "lights" and containing any other command(s)
-            pattern = re.compile(lightControlRegex)
+            pattern = re.compile(light_control_regex)
             match = pattern.match(data['text'])
 
             if match is not None:
-                lightCommand = match.group(1)
+                light_command = match.group(1)
 
-                if lightCommand != None:
-                    self.processLightsCommand(lightCommand, data)
+                if light_command != None:
+                    self.process_lights_command(light_command, data)
 
         # NPS scores
-        if isWootricBot or userImpersonatingBot:
+        if is_wootric_bot or user_impersonating_bot:
             pattern = re.compile(r"New NPS rating:\s+(\d+)")
 
-            if userImpersonatingBot:
+            if user_impersonating_bot:
                 match = pattern.match(data['text'])
-            elif isWootricBot and 'attachments' in data:
+            elif is_wootric_bot and 'attachments' in data:
                 match = pattern.match(data['attachments'][0]['text'])
 
             if match is not None:
-                npsScore = match.group(1)
+                nps_score = match.group(1)
 
                 if npsScore is not None:
-                    self.processNPSScore(npsScore)
+                    self.process_nps_score(nps_score)
 
-    def processLightsCommand(self, args, data=None):
+    def process_lights_command(self, args, data=None):
         pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
         match = pattern.match(args)
 
         try:
-            targetLights = match.group(1).split()
+            target_lights = match.group(1).split()
         except:
-            targetLights = self.allLights
+            target_lights = self.allLights
 
         command = match.group(3)
 
         if 'debug' in command.lower():
-            self.handleDebugCommand(args, data)
+            self.handle_debug_command(args, data)
             return
 
         if command.lower() == 'whirl':
-            self.blueWhirl()
+            self.blue_whirl()
             return
 
         if command.lower() == 'wigwag':
@@ -146,22 +146,22 @@ class LightBot(Plugin):
             return
 
         if command.lower() == 'on':
-            self.lightsOnOrOff(True, targetLights)
+            self.lights_on_or_off(True, target_lights)
             return
         elif command.lower() == 'off':
-            self.lightsOnOrOff(False, targetLights)
+            self.lights_on_or_off(False, target_lights)
             return
 
         if command.lower() == 'dance party':
-            self.danceParty(targetLights)
+            self.danceParty(target_lights)
             return
 
         # Check for a color
         try:
-            xy = self.xyFromColorString(command)
+            xy = self.xy_from_color_string(command)
 
             if xy is not None:
-                self.colorChange(xy, targetLights)
+                self.color_change(xy, target_lights)
                 return
         except:
             pass
@@ -174,55 +174,55 @@ class LightBot(Plugin):
             brightness = match.group(2)
 
             if brightness is not None:
-                self.brightnessChange(brightness, targetLights)
+                self.brightness_change(brightness, target_lights)
                 return
 
         # Check for a scene after updating Hue API
-        sceneID = self.sceneIDMatchingString(command)
+        scene_id = self.scene_id_matching_string(command)
 
-        if sceneID is not None:
-            self.bridge.activate_scene(0, sceneID)
+        if scene_id is not None:
+            self.bridge.activate_scene(0, scene_id)
             return
 
-    def handleDebugCommand(self, command, incomingData=None):
+    def handle_debug_command(self, command, incoming_data=None):
         if command == 'debug rules':
-            dataType = 'rules'
+            data_type = 'rules'
             data = self.bridge.request('GET', '/api/' + self.bridge.username + '/rules')
         elif command == 'debug schedules':
-            dataType = 'schedules'
+            data_type = 'schedules'
             data = self.bridge.get_schedule()
         elif command == 'debug lights':
-            dataType = 'lights'
+            data_type = 'lights'
             data = self.bridge.get_light()
         elif command == 'debug sensors':
-            dataType = 'sensors'
+            data_type = 'sensors'
             data = self.bridge.get_sensor()
         else:
-            dataType = 'bridge objects of all types'
+            data_type = 'bridge objects of all types'
             data = self.bridge.get_api()
 
-        prettyDataString = dumps(data, sort_keys=True, indent=4, separators=(',',':'))
+        pretty_data_string = dumps(data, sort_keys=True, indent=4, separators=(',',':'))
 
-        messageAttachments = [{
-            'fallback': '%d %s:' % (len(data), dataType),
-            'title': '%d %s:' % (len(data), dataType),
-            'text': prettyDataString
+        message_attachments = [{
+            'fallback': '%d %s:' % (len(data), data_type),
+            'title': '%d %s:' % (len(data), data_type),
+            'text': pretty_data_string
         }]
 
-        self.slack_client.api_call('chat.postMessage', as_user=True, channel=incomingData['channel'],
-                                   attachments=messageAttachments, type='message')
+        self.slack_client.api_call('chat.postMessage', as_user=True, channel=incoming_data['channel'],
+                                   attachments=message_attachments, type='message')
 
-    def sceneIDMatchingString(self, sceneName):
-        name = sceneName.lower()
+    def scene_id_matching_string(self, scene_name):
+        name = scene_name.lower()
 
-        for sceneID, scene in self.bridge.get_scene().iteritems():
+        for scene_id, scene in self.bridge.get_scene().iteritems():
             if scene['name'].lower() == name:
-                return sceneID
+                return scene_id
 
         return None
 
     # Disables all enabled schedules for the time period specified
-    def disableSchedulesForTime(self, seconds):
+    def disable_schedules_for_time(self, seconds):
         if seconds < 1:
             seconds = 1
 
@@ -232,37 +232,37 @@ class LightBot(Plugin):
         hours = minutes / 60
         minutes %= 60
 
-        timeString = 'PT%02d:%02d:%02d' % (hours, minutes, seconds)
+        time_string = 'PT%02d:%02d:%02d' % (hours, minutes, seconds)
 
-        allSchedules = self.bridge.get_schedule()
+        all_schedules = self.bridge.get_schedule()
 
-        for scheduleID, schedule in allSchedules.iteritems():
+        for schedule_id, schedule in all_schedules.iteritems():
             if schedule['status'] == 'enabled':
-                reenableScheduleSchedule = {
-                    'name': 'temporarilyDisableSchedule%s' % str(scheduleID),
-                    'time': timeString,
+                reenable_schedule_schedule = {
+                    'name': 'temporarilyDisableSchedule%s' % str(schedule_id),
+                    'time': time_string,
                     'command': {
                         'method': 'PUT',
-                        'address': '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
+                        'address': '/api/' + self.bridge.username + '/schedules/' + str(schedule_id),
                         'body': {'status': 'enabled'}
                     }
                 }
 
-                result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
+                result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/schedules/' + str(schedule_id),
                                              dumps({'status': 'disabled'}))
                 self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
-                                    dumps(reenableScheduleSchedule))
+                                    dumps(reenable_schedule_schedule))
 
                 print result
 
     # Accepts colors in the format of a color name, XY values, RGB values, or hex RGB code.
     # Returns [X,Y] for use in the Philips Hue API.
-    def xyFromColorString(self, string):
+    def xy_from_color_string(self, string):
         # Our regex patterns
-        hexPattern = re.compile(r"^#?(([A-Fa-f\d]{3}){1,2})$")
-        xyPattern = re.compile(r"^[[({]?\s*(\d+(\.\d+)?)[,\s]+(\d+(\.\d+)?)\s*[])}]?\s*$")
-        rgbIntegerPattern = re.compile(r"^[[({]?\s*(\d+)[,\s]+(\d+(\.\d+)?)[,\s]+(\d+)\s*[])}]?\s*$")
-        rgbPercentPattern = re.compile(r"^[[({]?\s*(\d+)%[,\s]+(\d+)%[,\s]+(\d+)%\s*[])}]?\s*$")
+        hex_pattern = re.compile(r"^#?(([A-Fa-f\d]{3}){1,2})$")
+        xy_pattern = re.compile(r"^[[({]?\s*(\d+(\.\d+)?)[,\s]+(\d+(\.\d+)?)\s*[])}]?\s*$")
+        rgb_integer_pattern = re.compile(r"^[[({]?\s*(\d+)[,\s]+(\d+(\.\d+)?)[,\s]+(\d+)\s*[])}]?\s*$")
+        rgb_percent_pattern = re.compile(r"^[[({]?\s*(\d+)%[,\s]+(\d+)%[,\s]+(\d+)%\s*[])}]?\s*$")
 
         rgb = None
         xy = None
@@ -274,7 +274,7 @@ class LightBot(Plugin):
 
         if rgb is None:
             # No name matched
-            match = hexPattern.match(string)
+            match = hex_pattern.match(string)
 
             if match is not None:
                 try:
@@ -283,7 +283,7 @@ class LightBot(Plugin):
                     pass
             else:
                 # No name, no hex
-                match = rgbPercentPattern.match(string)
+                match = rgb_percent_pattern.match(string)
 
                 if match is not None:
                     r = int(match.group(1)) * 255 / 100
@@ -292,7 +292,7 @@ class LightBot(Plugin):
 
                 else:
                     # No name, no hex, no RGB percent
-                    match = rgbIntegerPattern.match(string)
+                    match = rgb_integer_pattern.match(string)
 
                     if match is not None:
                         r = int(match.group(1))
@@ -303,18 +303,18 @@ class LightBot(Plugin):
                     rgb = [r, g, b]
                 else:
                     # No name, no hex, no RGB percent, no RGB integers
-                    match = xyPattern.match(string)
+                    match = xy_pattern.match(string)
 
                     if match is not None:
                         xy = [float(match.group(1)), float(match.group(3))]
 
         if xy is None and rgb is not None:
             # We have RGB.  Convert to XY for Philips-ness.
-            xy = self.rgbToXY(rgb)
+            xy = self.rgb_to_xy(rgb)
 
         return xy
 
-    def rgbToXY(self, rgb):
+    def rgb_to_xy(self, rgb):
         # Some magic number witchcraft to go from rgb 255 to Philips XY
         # from http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
         red = rgb[0] / 255.0
@@ -325,17 +325,17 @@ class LightBot(Plugin):
         green = ((green + 0.055) / (1.0 + 0.055) ** 2.4) if (green > 0.04045) else (green / 12.92)
         blue = ((blue + 0.055) / (1.0 + 0.055) ** 2.4) if (blue > 0.04045) else (blue / 12.92)
 
-        X = red * 0.664511 + green * 0.154324 + blue * 0.162028
-        Y = red * 0.283881 + green * 0.668433 + blue * 0.047685
-        Z = red * 0.000088 + green * 0.072310 + blue * 0.986039
+        x = red * 0.664511 + green * 0.154324 + blue * 0.162028
+        y = red * 0.283881 + green * 0.668433 + blue * 0.047685
+        z = red * 0.000088 + green * 0.072310 + blue * 0.986039
 
-        return [X / (X + Y + Z), Y / (X + Y + Z)]
+        return [x / (x+y+z), y / (x+y+z)]
 
-    def colorChange(self, xy, lights):
+    def color_change(self, xy, lights):
         for light in lights:
             self.bridge.set_light(int(light), {'on': True, 'xy': xy})
 
-    def brightnessChange(self, brightness, lights):
+    def brightness_change(self, brightness, lights):
         if '%' in brightness:
             brightness = brightness.strip('%')
             brightness = float(brightness) / 100.0
@@ -351,154 +351,154 @@ class LightBot(Plugin):
         for light in lights:
             self.bridge.set_light(int(light), {'on': True, 'bri': brightness})
 
-    def messageAllowsLightControl(self, data):
+    def message_allows_light_control(self, data):
         # Is this person in one of our full control channels?
-        if 'channel' in data and data['channel'] in self.allowedLightControlChannelIDs:
+        if 'channel' in data and data['channel'] in self.allowed_light_control_channel_ids:
             return True
-        if 'user' in data and data['user'] in self.allowedLightControlUserIDs:
+        if 'user' in data and data['user'] in self.allowed_light_control_user_ids:
             return True
         return False
 
-    def processNPSScore(self, score):
+    def process_nps_score(self, score):
         if score == '10':
-            self.blueWhirl()
+            self.blue_whirl()
         elif score == '9':
             self.wigwag()
         elif score == '0':
             self.pulsate()
 
-    def lightsOnOrOff(self, offOrOn, lights):
+    def lights_on_or_off(self, off_or_on, lights):
         for light in lights:
-            self.bridge.set_light(int(light), {'on' : offOrOn})
+            self.bridge.set_light(int(light), {'on': off_or_on})
 
-    def danceParty(self, lights):
-        startingStatus = {}
-        flashCount = 66
-        delayBetweenFlashes = 0.15
-        totalDuration = flashCount * delayBetweenFlashes
+    def dance_party(self, lights):
+        starting_status = {}
+        flash_count = 66
+        delay_between_flashes = 0.15
+        total_duration = flash_count * delay_between_flashes
 
-        self.disableSchedulesForTime(totalDuration)
+        self.disable_schedules_for_time(total_duration)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
 
             if state is not None:
-                startingStatus[light] = self.restorableStateForLight(state)
+                starting_status[light] = self.restorable_state_for_light(state)
 
         for i in lights:
             self.bridge.set_light(int(i), {'on': True})
 
-        for loopIndex in range(0,flashCount):
+        for loop_index in range(0,flash_count):
             for i in lights:
                 xy = [random.uniform(0.0, 1.0), random.uniform(0.0, 1.0)]
-                self.bridge.set_light(int(i), {'bri': 250, 'xy':xy, 'transitionTime' : 0, 'alert': 'select'})
+                self.bridge.set_light(int(i), {'bri': 250, 'xy': xy, 'transitionTime': 0, 'alert': 'select'})
 
-                time.sleep(delayBetweenFlashes)
+                time.sleep(delay_between_flashes)
 
         for light in lights:
-            self.bridge.set_light(int(light), startingStatus[light])
+            self.bridge.set_light(int(light), starting_status[light])
 
-    def restorableStateForLight(self, lightObject):
-        state = {'bri' : lightObject['bri'], 'on' : lightObject['on']}
+    def restorable_state_for_light(self, light_object):
+        state = {'bri': light_object['bri'], 'on': light_object['on']}
 
-        if lightObject['colormode'] == 'hs':
-            state['hue'] = lightObject['hue']
-            state['sat'] = lightObject['sat']
-        elif lightObject['colormode'] == 'ct':
-            state['ct'] = lightObject['ct']
+        if light_object['colormode'] == 'hs':
+            state['hue'] = light_object['hue']
+            state['sat'] = light_object['sat']
+        elif light_object['colormode'] == 'ct':
+            state['ct'] = light_object['ct']
         else:
-            state['xy'] = lightObject['xy']
+            state['xy'] = light_object['xy']
 
         return state
 
     def wigwag(self):
-        startingStatus = {}
-        allWigwagLights = self.wigwagGroups[0] + self.wigwagGroups[1]
-        transitionTime = 5
-        inOneSecond = 'PT00:00:01'
-        repeatCount = 5
-        secondsBetweenPhases = 1
-        everyTwoSeconds = 'R%02d/PT00:00:02' % repeatCount
-        totalDuration = (repeatCount) * secondsBetweenPhases * 2
-        afterItsOver = 'PT00:00:%02d' % totalDuration
+        starting_status = {}
+        all_wigwag_lights = self.wigwag_groups[0] + self.wigwag_groups[1]
+        transition_time = 5
+        in_one_second = 'PT00:00:01'
+        repeat_count = 5
+        seconds_between_phases = 1
+        every_two_seconds = 'R%02d/PT00:00:02' % repeat_count
+        total_duration = repeat_count * seconds_between_phases * 2
+        after_its_over = 'PT00:00:%02d' % total_duration
 
-        self.disableSchedulesForTime(totalDuration)
+        self.disable_schedules_for_time(total_duration)
 
-        for lightId in allWigwagLights:
-            state = self.bridge.get_light(int(lightId))['state']
+        for light_id in all_wigwag_lights:
+            state = self.bridge.get_light(int(light_id))['state']
 
             if state is not None:
-                startingStatus[lightId] = self.restorableStateForLight(state)
+                starting_status[light_id] = self.restorable_state_for_light(state)
 
             if not state['on']:
-                self.bridge.create_schedule('turn%dOnBeforeWigwag' % lightId, inOneSecond, lightId, {'on' : True})
+                self.bridge.create_schedule('turn%dOnBeforeWigwag' % light_id, in_one_second, light_id, {'on': True})
 
         # Ensure all lights will be on
-        for lightId in allWigwagLights:
-            if not self.bridge.lights_by_id[lightId].on:
-                self.bridge.create_schedule('turn%dOnBeforeWigwag' % lightId, inOneSecond, lightId, {'on' : True})
+        for light_id in all_wigwag_lights:
+            if not self.bridge.lights_by_id[light_id].on:
+                self.bridge.create_schedule('turn%dOnBeforeWigwag' % light_id, in_one_second, light_id, {'on': True})
 
         # First phase
-        for lightId in self.wigwagGroups[0]:
-            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy': self.wigwagColor, 'bri': 154, 'transitiontime': transitionTime
+        for light_id in self.wigwag_groups[0]:
+            self.bridge.create_schedule('wigwag-1-%d' % light_id, every_two_seconds, light_id, {
+                'xy': self.wigwag_color, 'bri': 154, 'transitiontime': transition_time
             })
-        for lightId in self.wigwagGroups[1]:
-            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy': self.wigwagColor, 'bri': 0, 'transitiontime': transitionTime
+        for light_id in self.wigwag_groups[1]:
+            self.bridge.create_schedule('wigwag-1-%d' % light_id, every_two_seconds, light_id, {
+                'xy': self.wigwag_color, 'bri': 0, 'transitiontime': transition_time
             })
 
         # Delay before setting second phase
-        time.sleep(secondsBetweenPhases)
+        time.sleep(seconds_between_phases)
 
         # Second phase
-        for lightId in self.wigwagGroups[0]:
-            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime': transitionTime
+        for light_id in self.wigwag_groups[0]:
+            self.bridge.create_schedule('wigwag-2-%d' % light_id, everyTwoSeconds, light_id, {
+                'xy': self.wigwag_color, 'bri': 0, 'transitiontime': transitionTime
             })
-        for lightId in self.wigwagGroups[1]:
-            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {
-                'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime': transitionTime
+        for light_id in self.wigwag_groups[1]:
+            self.bridge.create_schedule('wigwag-2-%d' % light_id, everyTwoSeconds, light_id, {
+                'xy': self.wigwag_color, 'bri': 154, 'transitiontime': transitionTime
             })
 
         # Restore original state
-        for lightId in allWigwagLights:
-            result = self.bridge.create_schedule('wigwag-3-%d' % lightId, afterItsOver, lightId,
-                                                 startingStatus[lightId])
+        for light_id in all_wigwag_lights:
+            result = self.bridge.create_schedule('wigwag-3-%d' % light_id, after_its_over, light_id,
+                                                 starting_status[light_id])
 
             if self.debug:
-                print "Setting light %d to restore state to:\n" % lightId
-                print startingStatus[lightId]
+                print "Setting light %d to restore state to:\n" % light_id
+                print starting_status[light_id]
                 print result
 
         if self.debug:
             print self.bridge.get_schedule()
 
-    def deleteAllSensorsWithNameBegining(self, namePrefix):
-        allSensors = self.bridge.get_sensor()
+    def delete_all_sensors_with_name_begining(self, name_prefix):
+        all_sensors = self.bridge.get_sensor()
 
-        for sensorID, sensor in allSensors.iteritems():
-            if namePrefix in sensor['name']:
-                result = self.bridge.request('DELETE', '/api/' + self.bridge.username + '/sensors/' + str(sensorID))
+        for sensor_id, sensor in all_sensors.iteritems():
+            if name_prefix in sensor['name']:
+                result = self.bridge.request('DELETE', '/api/' + self.bridge.username + '/sensors/' + str(sensor_id))
                 print result
 
-    def deleteAllSchedulesWithNameBegining(self, namePrefix):
-        allSchedules = self.bridge.request('GET', '/api/' + self.bridge.username + '/schedules')
+    def delete_all_schedules_with_name_begining(self, name_prefix):
+        all_schedules = self.bridge.request('GET', '/api/' + self.bridge.username + '/schedules')
 
-        for scheduleID, schedule in allSchedules.iteritems():
-            if namePrefix in schedule['name']:
-                self.bridge.request('DELETE', '/api/' + self.bridge.username + '/schedules/' + str(scheduleID))
+        for schedule_id, schedule in all_schedules.iteritems():
+            if name_prefix in schedule['name']:
+                self.bridge.request('DELETE', '/api/' + self.bridge.username + '/schedules/' + str(schedule_id))
 
-    def deleteAllRulesWithNameBegining(self, namePrefix):
-        allRules = self.bridge.request('GET', '/api/' + self.bridge.username + '/rules')
+    def delete_all_rules_with_name_begining(self, name_prefix):
+        all_rules = self.bridge.request('GET', '/api/' + self.bridge.username + '/rules')
 
-        for ruleID, rule in allRules.iteritems():
-            if namePrefix in rule['name']:
-                self.bridge.request('DELETE', '/api/' + self.bridge.username + '/rules/' + str(ruleID))
+        for rule_id, rule in all_rules.iteritems():
+            if name_prefix in rule['name']:
+                self.bridge.request('DELETE', '/api/' + self.bridge.username + '/rules/' + str(rule_id))
 
     def pulsate(self):
-        lights = self.allLights
-        startingStatus = {}
+        lights = self.all_lights
+        starting_status = {}
 
         # More than seven lights would require multiple rules in the Bridge since we are limited to 8 actions per rule.
         # This would be relatively straight forward to solve but is not worth the effort at the moment.
@@ -507,44 +507,44 @@ class LightBot(Plugin):
                 + 'List will be truncated to 6.' % len(lights)
             lights = lights[:6]
 
-        pulseBri = 88
-        originalFadeDurationDeciseconds = 50
-        originalFadeScheduleTime = 'PT00:00:%02d' % (originalFadeDurationDeciseconds / 10)
-        halfPulseDurationDeciseconds = 20
-        halfPulseScheduleTime = 'PT00:00:%02d' % (halfPulseDurationDeciseconds / 10)
-        pulseCount = 5
+        pulse_bri = 88
+        original_fade_duration_deciseconds = 50
+        original_fade_schedule_time = 'PT00:00:%02d' % (original_fade_duration_deciseconds / 10)
+        half_pulse_duration_deciseconds = 20
+        half_pulse_schedule_time = 'PT00:00:%02d' % (half_pulse_duration_deciseconds / 10)
+        pulse_count = 5
 
-        totalDurationSeconds = pulseCount * halfPulseDurationDeciseconds * 2 / 10
-        totalDurationMinutes = totalDurationSeconds / 60
-        totalDurationSeconds = totalDurationSeconds % 60
-        totalDurationScheduleTime = 'PT00:%02d:%02d' % (totalDurationMinutes, totalDurationSeconds)
+        total_duration_seconds = pulse_count * half_pulse_duration_deciseconds * 2 / 10
+        total_duration_minutes = total_duration_seconds / 60
+        total_duration_seconds %= 60
+        total_duration_schedule_time = 'PT00:%02d:%02d' % (total_duration_minutes, total_duration_seconds)
 
-        self.deleteAllSensorsWithNameBegining('Pulsation')
-        self.deleteAllSchedulesWithNameBegining('Pulsation')
-        self.deleteAllRulesWithNameBegining('Pulsation')
-        self.disableSchedulesForTime(totalDurationSeconds)
+        self.delete_all_sensors_with_name_begining('Pulsation')
+        self.delete_all_schedules_with_name_begining('Pulsation')
+        self.delete_all_rules_with_name_begining('Pulsation')
+        self.disable_schedules_for_time(total_duration_seconds)
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
 
             if state is not None:
-                restorableState = self.restorableStateForLight(state)
-                restorableState['transitiontime'] = 20
-                startingStatus[light] = restorableState
+                restorable_state = self.restorable_state_for_light(state)
+                restorable_state['transitiontime'] = 20
+                starting_status[light] = restorable_state
 
-        lightsUpState = {
-            'bri': pulseBri,
-            'xy': self.slowPulseColor,
-            'transitiontime': halfPulseDurationDeciseconds
+        lights_up_state = {
+            'bri': pulse_bri,
+            'xy': self.slow_pulse_color,
+            'transitiontime': half_pulse_duration_deciseconds
         }
 
-        lightsDownState = {
+        lights_down_state = {
             'bri': 0,
-            'xy': self.slowPulseColor,
-            'transitiontime': halfPulseDurationDeciseconds
+            'xy': self.slow_pulse_color,
+            'transitiontime': half_pulse_duration_deciseconds
         }
 
-        pulsationStatusSensor = {
+        pulsation_status_sensor = {
             'name': 'PulsationStatusSensor',
             'uniqueid': 'PulsationStatusSensor',
             'type': 'CLIPGenericStatus',
@@ -557,18 +557,18 @@ class LightBot(Plugin):
         }
 
         # Create the sensors used for status (replacing it if it already exists with the same uniqueid)
-        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/sensors', dumps(pulsationStatusSensor))
-        statusSensorID = result[0]['success']['id']
-        pulsationStateAddress = '/sensors/' + str(statusSensorID) + '/state'
+        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/sensors', dumps(pulsation_status_sensor))
+        status_sensor_id = result[0]['success']['id']
+        pulsation_state_address = '/sensors/' + str(status_sensor_id) + '/state'
 
         # Schedules
-        goingUpSchedule = {
+        going_up_schedule = {
             'name': 'Pulsation going up',
-            'time': halfPulseScheduleTime,
+            'time': half_pulse_schedule_time,
             'autodelete': False,
             'status': 'disabled',
             'command': {
-                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
                     'status': 2
@@ -576,13 +576,13 @@ class LightBot(Plugin):
             }
         }
 
-        goingDownSchedule = {
+        going_down_schedule = {
             'name': 'Pulsation going down',
-            'time': halfPulseScheduleTime,
+            'time': half_pulse_schedule_time,
             'autodelete': False,
             'status': 'disabled',
             'command': {
-                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
                     'status': 1
@@ -590,78 +590,78 @@ class LightBot(Plugin):
             }
         }
 
-        goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
-                                            dumps(goingUpSchedule))
-        goingUpScheduleID = goingUpResult[0]['success']['id']
-        goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
-                                              dumps(goingDownSchedule))
-        goingDownScheduleID = goingDownResult[0]['success']['id']
+        going_up_result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
+                                              dumps(going_up_schedule))
+        going_up_schedule_id = going_up_result[0]['success']['id']
+        going_down_result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
+                                                dumps(going_down_schedule))
+        going_down_schedule_id = going_down_result[0]['success']['id']
 
         # Create the two rules for going up and down
-        startGoingUpRule = {
+        start_going_up_rule = {
             'name': 'Pulsation at bottom',
             'conditions': [
                 {
-                    'address': pulsationStateAddress + '/status',
+                    'address': pulsation_state_address + '/status',
                     'operator': 'eq',
                     'value': '1'
                 },
                 {
-                    'address': pulsationStateAddress + '/lastupdated',
+                    'address': pulsation_state_address + '/lastupdated',
                     'operator': 'dx'
                 }
             ],
             'actions': [
                 {
-                    'address': '/schedules/' + str(goingUpScheduleID),
+                    'address': '/schedules/' + str(going_up_schedule_id),
                     'method': 'PUT',
                     'body': {'status': 'enabled'}
                 },
                 {
-                    'address': '/schedules/' + str(goingDownScheduleID),
+                    'address': '/schedules/' + str(going_down_schedule_id),
                     'method': 'PUT',
                     'body': {'status': 'disabled'}
                 }
             ]
         }
 
-        startGoingDownRule = {
+        start_going_down_rule = {
             'name': 'Pulsation at top',
             'conditions': [
                 {
-                    'address': pulsationStateAddress + '/status',
+                    'address': pulsation_state_address + '/status',
                     'operator': 'eq',
                     'value': '2'
                 },
                 {
-                    'address': pulsationStateAddress + '/lastupdated',
+                    'address': pulsation_state_address + '/lastupdated',
                     'operator': 'dx'
                 }
             ],
             'actions': [
                 {
-                    'address': '/schedules/' + str(goingUpScheduleID),
+                    'address': '/schedules/' + str(going_up_schedule_id),
                     'method': 'PUT',
                     'body': {'status': 'disabled'}
                 },
                 {
-                    'address': '/schedules/' + str(goingDownScheduleID),
+                    'address': '/schedules/' + str(going_down_schedule_id),
                     'method': 'PUT',
                     'body': {'status': 'enabled'}
                 }
             ]
         }
 
-        originalLightStateRule = {
+        original_light_state_rule = {
             'name': 'Pulsation restore state',
             'conditions': [
                 {
-                    'address': pulsationStateAddress + '/status',
+                    'address': pulsation_state_address + '/status',
                     'operator': 'eq',
                     'value': '3'
                 },
                 {
-                    'address': pulsationStateAddress + '/lastupdated',
+                    'address': pulsation_state_address + '/lastupdated',
                     'operator': 'dx'
                 }
             ],
@@ -669,78 +669,78 @@ class LightBot(Plugin):
         }
 
         # Add actions to both rules to bring each light up and down as the sensor state changes
-        for lightID in lights:
-            lightAddress = '/lights/' + str(lightID) + '/state'
-            startGoingUpRule['actions'].append({
-                'address': lightAddress,
+        for light_id in lights:
+            light_address = '/lights/' + str(light_id) + '/state'
+            start_going_up_rule['actions'].append({
+                'address': light_address,
                 'method': 'PUT',
-                'body': lightsUpState
+                'body': lights_up_state
             })
-            startGoingDownRule['actions'].append({
-                'address': lightAddress,
+            start_going_down_rule['actions'].append({
+                'address': light_address,
                 'method': 'PUT',
-                'body': lightsDownState
+                'body': lights_down_state
             })
-            originalLightStateRule['actions'].append({
-                'address': lightAddress,
+            original_light_state_rule['actions'].append({
+                'address': light_address,
                 'method': 'PUT',
-                'body': startingStatus[lightID]
+                'body': starting_status[light_id]
             })
 
-        goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
-                                            dumps(startGoingUpRule))
-        goingUpRuleID = goingUpResult[0]['success']['id']
-        goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
-                                              dumps(startGoingDownRule))
-        goingDownRuleID = goingDownResult[0]['success']['id']
+        going_up_result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
+                                              dumps(start_going_up_rule))
+        going_up_rule_id = goingUpResult[0]['success']['id']
+        going_down_result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
+                                                dumps(start_going_down_rule))
+        going_down_rule_id = goingDownResult[0]['success']['id']
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
-                                     dumps(originalLightStateRule))
+                                     dumps(original_light_state_rule))
 
-        cleanupRule = {
+        cleanup_rule = {
             'name': 'Pulsation clean up',
             'conditions': [
                 {
-                    'address': pulsationStateAddress + '/status',
+                    'address': pulsation_state_address + '/status',
                     'operator': 'eq',
                     'value': '3'
                 },
                 {
-                    'address': pulsationStateAddress + '/lastupdated',
+                    'address': pulsation_state_address + '/lastupdated',
                     'operator': 'dx'
                 }
             ],
             'actions': [
                 {
-                    'address': '/rules/' + str(goingUpRuleID),
+                    'address': '/rules/' + str(going_up_rule_id),
                     'method': 'PUT',
                     'body': {'status': 'disabled'}
                 },
                 {
-                    'address': '/rules/' + str(goingDownRuleID),
+                    'address': '/rules/' + str(going_down_rule_id),
                     'method': 'PUT',
                     'body': {'status': 'disabled'}
                 },
                 {
-                    'address': '/schedules/' + str(goingUpScheduleID),
+                    'address': '/schedules/' + str(going_up_schedule_id),
                     'method': 'PUT',
                     'body': {'status': 'disabled'}
                 },
                 {
-                    'address': '/schedules/' + str(goingDownScheduleID),
+                    'address': '/schedules/' + str(going_down_schedule_id),
                     'method': 'PUT',
                     'body': {'status': 'disabled'}
                 }
             ]
         }
 
-        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(cleanupRule))
+        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(cleanup_rule))
 
         # The schedule that stops the constant
-        cleanupSchedule = {
+        cleanup_schedule = {
             'name': 'Pulsation clean up',
-            'time': totalDurationScheduleTime,
+            'time': total_duration_schedule_time,
             'command': {
-                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
                     'status': 3
@@ -748,25 +748,25 @@ class LightBot(Plugin):
             }
         }
 
-        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(cleanupSchedule))
+        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(cleanup_schedule))
 
         # First fade them all down to nothing
-        lightsTotallyOff = {
+        lights_totally_off = {
             'bri': 0,
-            'transitiontime': originalFadeDurationDeciseconds
+            'transitiontime': original_fade_duration_deciseconds
         }
-        for lightID in lights:
-            light = self.bridge.lights_by_id[lightID]
-            result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/lights/' + str(lightID) + '/state',
-                                         dumps(lightsTotallyOff))
+        for light_id in lights:
+            light = self.bridge.lights_by_id[light_id]
+            result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/lights/' + str(light_id) + '/state',
+                                         dumps(lights_totally_off))
             print result
 
         # Start the pulsation once that is done
-        beginSchedule = {
+        begin_schedule = {
             'name': 'Pulsation begin',
-            'time': originalFadeScheduleTime,
+            'time': original_fade_schedule_time,
             'command': {
-                'address': '/api/' + self.bridge.username + pulsationStateAddress,
+                'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
                     'status': 1
@@ -774,59 +774,59 @@ class LightBot(Plugin):
             }
         }
 
-        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(beginSchedule))
+        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(begin_schedule))
 
-    def blueWhirl(self):
-        lights = self.allLights
-        startingStatus = {}
+    def blue_whirl(self):
+        lights = self.all_lights
+        starting_status = {}
 
         for light in lights:
             state = self.bridge.get_light(int(light))['state']
 
             if state is not None:
-                startingStatus[light] = self.restorableStateForLight(state)
+                starting_status[light] = self.restorable_state_for_light(state)
 
-        stepTime = 0.075
-        timeBetweenWhirls = 0.5
-        transitionTime = 1
-        whirlCount = 10
+        step_time = 0.075
+        time_between_whirls = 0.5
+        transition_time = 1
+        whirl_count = 10
 
-        totalSeconds = ((stepTime * 4) + timeBetweenWhirls) * whirlCount
-        finishedTimestamp = 'PT00:00:%02d' % totalSeconds
+        total_seconds = ((step_time * 4) + time_between_whirls) * whirl_count
+        finished_timestamp = 'PT00:00:%02d' % total_seconds
 
-        self.disableSchedulesForTime(totalSeconds)
+        self.disable_schedules_for_time(total_seconds)
 
         # Return to original state after we're done
-        for lightId in lights:
-            self.bridge.create_schedule('restore%dAfterWhirl' % lightId, finishedTimestamp, lightId,
-                                        startingStatus[lightId])
+        for light_id in lights:
+            self.bridge.create_schedule('restore%dAfterWhirl' % light_id, finished_timestamp, light_id,
+                                        starting_status[light_id])
 
         # Build our 'off' states to go with the on state
-        offStates = {}
+        off_states = {}
 
-        for lightId, status in startingStatus.iteritems():
+        for light_id, status in starting_status.iteritems():
             state = deepcopy(status)
             del state['on']
             if not status['on']:
                 state['bri'] = 1
 
-            offStates[lightId] = state
+            off_states[light_id] = state
 
-        for i in range(0,whirlCount):
-            onState = {'xy': self.whirlColor, 'bri': 255, 'transitiontime': transitionTime}
+        for i in range(0,whirl_count):
+            on_state = {'xy': self.whirl_color, 'bri': 255, 'transitiontime': transition_time}
 
             if i == 0:
                 # The first time through, we need to make sure we set 'on' to True if necessary
-                onState['on'] = True
+                on_state['on'] = True
 
-            self.bridge.set_light(3, onState)
-            time.sleep(stepTime)
-            self.bridge.set_light(4, onState)
-            time.sleep(stepTime)
-            self.bridge.set_light(3, offStates[3])
-            self.bridge.set_light(5, onState)
-            time.sleep(stepTime)
-            self.bridge.set_light(4, offStates[4])
-            time.sleep(stepTime)
-            self.bridge.set_light(5, offStates[5])
-            time.sleep(timeBetweenWhirls)
+            self.bridge.set_light(3, on_state)
+            time.sleep(step_time)
+            self.bridge.set_light(4, on_state)
+            time.sleep(step_time)
+            self.bridge.set_light(3, off_states[3])
+            self.bridge.set_light(5, on_state)
+            time.sleep(step_time)
+            self.bridge.set_light(4, off_states[4])
+            time.sleep(step_time)
+            self.bridge.set_light(5, off_states[5])
+            time.sleep(time_between_whirls)
