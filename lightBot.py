@@ -31,9 +31,9 @@ class LightBot(Plugin):
         self.allowed_light_control_channel_ids = plugin_config.get('CHANNELS', None)
         self.allowed_light_control_user_ids = plugin_config.get('USERS', None)
         self.wootric_bot_id = plugin_config.get('WOOTRIC_BOT', None)
-        self.wigwag_color = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(DEFAULT_WIGWAG_COLOR)))
-        self.whirl_color = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(DEFAULT_WHIRL_COLOR)))
-        self.slow_pulse_color = self.xyFromColorString(
+        self.wigwag_color = self.xy_from_color_string(plugin_config.get('WIGWAG_COLOR', str(DEFAULT_WIGWAG_COLOR)))
+        self.whirl_color = self.xy_from_color_string(plugin_config.get('WHIRL_COLOR', str(DEFAULT_WHIRL_COLOR)))
+        self.slow_pulse_color = self.xy_from_color_string(
             plugin_config.get('SLOW_PULSE_COLOR', str(DEFAULT_SLOW_PULSE_COLOR)))
         self.slow_pulse_lights = plugin_config.get('SLOW_PULSE_LIGHTS', None)
 
