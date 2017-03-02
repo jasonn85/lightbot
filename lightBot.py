@@ -9,6 +9,10 @@ from rtmbot.core import Plugin
 from phue import Bridge
 from webcolors import name_to_rgb, hex_to_rgb, rgb_percent_to_rgb
 
+DEFAULT_WIGWAG_COLOR = [0.1576, 0.2368]
+DEFAULT_WHIRL_COLOR = [0.1576, 0.2368]
+DEFAULT_SLOW_PULSE_COLOR = [0.7, 0.2986]
+
 outputs = []
 
 class LightBot(Plugin):
@@ -19,12 +23,6 @@ class LightBot(Plugin):
     # Which lights should be targeted if no light specifying parameter is provided?
     allLights = [0]
 
-    wigwagGroups = None
-    wigwagColor = [0.1576, 0.2368]
-    whirlColor = [0.1576, 0.2368]
-    slowPulseColor = [0.7, 0.2986]
-    slowPulseLights = None  # All lights
-
     def __init__(self, name=None, slack_client=None, plugin_config=None):
         super( LightBot, self ).__init__(name=name, slack_client=slack_client, plugin_config=plugin_config)
 
@@ -33,9 +31,9 @@ class LightBot(Plugin):
         self.allowedLightControlChannelIDs = plugin_config.get('CHANNELS', None)
         self.allowedLightControlUserIDs = plugin_config.get('USERS', None)
         self.wootricBotID = plugin_config.get('WOOTRIC_BOT', None)
-        self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(self.wigwagColor)))
-        self.whirlColor = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(self.whirlColor)))
-        self.slowPulseColor = self.xyFromColorString(plugin_config.get('SLOW_PULSE_COLOR', str(self.slowPulseColor)))
+        self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(DEFAULT_WIGWAG_COLOR)))
+        self.whirlColor = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(DEFAULT_WHIRL_COLOR)))
+        self.slowPulseColor = self.xyFromColorString(plugin_config.get('SLOW_PULSE_COLOR', str(DEFAULT_SLOW_PULSE_COLOR)))
         self.slowPulseLights = plugin_config.get('SLOW_PULSE_LIGHTS', None)
 
         configLights = plugin_config.get('LIGHTS', None)
