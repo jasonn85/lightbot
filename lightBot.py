@@ -1,12 +1,13 @@
-from rtmbot.core import Plugin
-from phue import Bridge
 import time
 import re
 import random
-from webcolors import name_to_rgb, hex_to_rgb, rgb_percent_to_rgb
 from copy import deepcopy
 from json import dumps
 from math import ceil
+
+from rtmbot.core import Plugin
+from phue import Bridge
+from webcolors import name_to_rgb, hex_to_rgb, rgb_percent_to_rgb
 
 outputs = []
 
