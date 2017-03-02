@@ -22,7 +22,7 @@ class LightBot(Plugin):
     wigwagColor = [0.1576, 0.2368]
     whirlColor = [0.1576, 0.2368]
     slowPulseColor = [0.7, 0.2986]
-    slowPulseLights = None # All lights
+    slowPulseLights = None  # All lights
 
     def __init__(self, name=None, slack_client=None, plugin_config=None):
         super( LightBot, self ).__init__(name=name, slack_client=slack_client, plugin_config=plugin_config)
@@ -54,7 +54,7 @@ class LightBot(Plugin):
         lightsOnBridge = self.bridge.lights
 
         if self.allLights == [0]:
-        # The magic 0 light ID does not work for most light settings we will use
+            # The magic 0 light ID does not work for most light settings we will use
             self.allLights = []
             for light in lightsOnBridge:
                 self.allLights.append(light.light_id)
@@ -81,7 +81,6 @@ class LightBot(Plugin):
                     oddLights.append(light.light_id)
 
             self.wigwagGroups = [oddLights, evenLights]
-
 
     def process_message(self, data):
         print dumps(data)
@@ -250,7 +249,8 @@ class LightBot(Plugin):
 
                 print result
 
-    # Accepts colors in the format of a color name, XY values, RGB values, or hex RGB code.  Returns [X,Y] for use in the Philips Hue API
+    # Accepts colors in the format of a color name, XY values, RGB values, or hex RGB code.
+    # Returns [X,Y] for use in the Philips Hue API.
     def xyFromColorString(self, string):
         # Our regex patterns
         hexPattern = re.compile(r"^#?(([A-Fa-f\d]{3}){1,2})$")
@@ -309,7 +309,8 @@ class LightBot(Plugin):
         return xy
 
     def rgbToXY(self, rgb):
-        # Some magic number witchcraft to go from rgb 255 to Philips XY from http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+        # Some magic number witchcraft to go from rgb 255 to Philips XY
+        # from http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
         red = rgb[0] / 255.0
         green = rgb[1] / 255.0
         blue = rgb[2] / 255.0
@@ -752,7 +753,6 @@ class LightBot(Plugin):
         }
 
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(beginSchedule))
-
 
     def blueWhirl(self):
         lights = self.allLights
