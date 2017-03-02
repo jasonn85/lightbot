@@ -458,6 +458,14 @@ class LightBot(Plugin):
         if self.debug:
             print self.bridge.get_schedule()
 
+    def deleteAllSensorsWithNameBegining(self, namePrefix):
+        allSensors = self.bridge.get_sensor()
+
+        for sensorID, sensor in allSensors.iteritems():
+            if namePrefix in sensor['name']:
+                result = self.bridge.request('DELETE', '/api/' + self.bridge.username + '/sensors/' + str(sensorID))
+                print result
+
     def deleteAllSchedulesWithNameBegining(self, namePrefix):
         allSchedules = self.bridge.request('GET', '/api/' + self.bridge.username + '/schedules')
 
@@ -482,12 +490,6 @@ class LightBot(Plugin):
             print '%d lights are specified to pulsate.  Only pulsating up to 6 is currently supported.  List will be truncated to 6.' % len(lights)
             lights = lights[:6]
 
-        for light in lights:
-            state = self.bridge.get_light(int(light))['state']
-
-            if state is not None:
-                startingStatus[light] = self.restorableStateForLight(state)
-
         pulseBri = 88
         originalFadeDurationDeciseconds = 50
         originalFadeScheduleTime = 'PT00:00:%02d' % (originalFadeDurationDeciseconds / 10)
@@ -500,15 +502,29 @@ class LightBot(Plugin):
         totalDurationSeconds = totalDurationSeconds % 60
         totalDurationScheduleTime = 'PT00:%02d:%02d' % (totalDurationMinutes, totalDurationSeconds)
 
+        self.deleteAllSensorsWithNameBegining('Pulsation')
+        self.deleteAllSchedulesWithNameBegining('Pulsation')
+        self.deleteAllRulesWithNameBegining('Pulsation')
         self.disableSchedulesForTime(totalDurationSeconds)
+
+        for light in lights:
+            state = self.bridge.get_light(int(light))['state']
+
+            if state is not None:
+                restorableState = self.restorableStateForLight(state)
+                restorableState['transitiontime'] = 20
+                startingStatus[light] = restorableState
 
         lightsUpState = {
             'bri' : pulseBri,
-            'xy' : self.slowPulseColor
+            'xy' : self.slowPulseColor,
+            'transitiontime' : halfPulseDurationDeciseconds
         }
 
         lightsDownState = {
-            'bri' : 0
+            'bri' : 0,
+            'xy' : self.slowPulseColor,
+            'transitiontime' : halfPulseDurationDeciseconds
         }
 
         pulsationStatusSensor = {
@@ -523,8 +539,8 @@ class LightBot(Plugin):
             'modelid' : 'PulsationStatusSensor'
         }
 
-        # Create the two sensors used for status (replacing them if they already exist)
-        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/sensors', dumps(pulsationStatusSensor, separators=(',',':')))
+        # Create the sensors used for status (replacing it if it already exists with the same uniqueid)
+        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/sensors', dumps(pulsationStatusSensor))
         statusSensorID = result[0]['success']['id']
         pulsationStateAddress = '/sensors/' + str(statusSensorID) + '/state'
 
@@ -535,7 +551,7 @@ class LightBot(Plugin):
             'autodelete' : False,
             'status' : 'disabled',
             'command' : {
-                'address' : pulsationStateAddress,
+                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
                 'method' : 'PUT',
                 'body' : {
                     'status' : 2
@@ -549,7 +565,7 @@ class LightBot(Plugin):
             'autodelete' : False,
             'status' : 'disabled',
             'command' : {
-                'address' : pulsationStateAddress,
+                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
                 'method' : 'PUT',
                 'body' : {
                     'status' : 1
@@ -557,7 +573,6 @@ class LightBot(Plugin):
             }
         }
 
-        self.deleteAllSchedulesWithNameBegining('Pulsation')
         goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(goingUpSchedule))
         goingUpScheduleID = goingUpResult[0]['success']['id']
         goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(goingDownSchedule))
@@ -571,6 +586,10 @@ class LightBot(Plugin):
                     'address' : pulsationStateAddress + '/status',
                     'operator' : 'eq',
                     'value' : '1'
+                },
+                {
+                    'address' : pulsationStateAddress + '/lastupdated',
+                    'operator' : 'dx'
                 }
             ],
             'actions' : [
@@ -594,6 +613,10 @@ class LightBot(Plugin):
                     'address' : pulsationStateAddress + '/status',
                     'operator' : 'eq',
                     'value' : '2'
+                },
+                {
+                    'address' : pulsationStateAddress + '/lastupdated',
+                    'operator' : 'dx'
                 }
             ],
             'actions' : [
@@ -617,6 +640,10 @@ class LightBot(Plugin):
                     'address': pulsationStateAddress + '/status',
                     'operator': 'eq',
                     'value': '3'
+                },
+                {
+                    'address' : pulsationStateAddress + '/lastupdated',
+                    'operator' : 'dx'
                 }
             ],
             'actions': []
@@ -641,8 +668,6 @@ class LightBot(Plugin):
                 'body' : startingStatus[lightID]
             })
 
-        self.deleteAllRulesWithNameBegining('Pulsation')
-
         goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(startGoingUpRule))
         goingUpRuleID = goingUpResult[0]['success']['id']
         goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(startGoingDownRule))
@@ -656,6 +681,10 @@ class LightBot(Plugin):
                     'address': pulsationStateAddress + '/status',
                     'operator': 'eq',
                     'value': '3'
+                },
+                {
+                    'address' : pulsationStateAddress + '/lastupdated',
+                    'operator' : 'dx'
                 }
             ],
             'actions' : [
@@ -689,10 +718,10 @@ class LightBot(Plugin):
             'name' : 'Pulsation clean up',
             'time' : totalDurationScheduleTime,
             'command' : {
-                'address' : pulsationStateAddress,
+                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
                 'method' : 'PUT',
                 'body' : {
-                    'status' : '3'
+                    'status' : 3
                 }
             }
         }
@@ -700,24 +729,30 @@ class LightBot(Plugin):
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(cleanupSchedule))
 
         # First fade them all down to nothing
-        for lightID in self.slowPulseLights:
+        lightsTotallyOff = {
+            'bri' : 0,
+            'transitiontime' : originalFadeDurationDeciseconds
+        }
+        for lightID in lights:
             light = self.bridge.lights_by_id[lightID]
-            lowStatus = {'on' : 'True', 'bri' : '0', 'xy' : self.slowPulseColor, 'transitiontime' : originalFadeDurationDeciseconds}
+            result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/lights/' + str(lightID) + '/state', dumps(lightsTotallyOff))
+            print result
 
         # Start the pulsation once that is done
         beginSchedule = {
             'name' : 'Pulsation begin',
             'time' : originalFadeScheduleTime,
             'command' : {
-                'address' : pulsationStateAddress,
+                'address' : '/api/' + self.bridge.username + pulsationStateAddress,
                 'method' : 'PUT',
                 'body' : {
-                    'status' : '1'
+                    'status' : 1
                 }
             }
         }
 
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(beginSchedule))
+
 
     def blueWhirl(self):
         lights = self.allLights
