@@ -392,7 +392,7 @@ class LightBot(Plugin):
             self.bridge.set_light(int(light), startingStatus[light])
 
     def restorableStateForLight(self, lightObject):
-        state = {'bri' : lightObject['bri'], 'on' : lightObject['on'], 'colormode' : lightObject['colormode'], 'effect' : lightObject['effect']}
+        state = {'bri' : lightObject['bri'], 'on' : lightObject['on']}
 
         if lightObject['colormode'] == 'hs':
             state['hue'] = lightObject['hue']
