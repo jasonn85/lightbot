@@ -58,13 +58,11 @@ class LightBot(Plugin):
             self.all_lights = []
             for light in lights_on_bridge:
                 self.all_lights.append(light.light_id)
-        try:
-            config_wig_wag_groups = plugin_config.get('WIGWAG_GROUPS', None)
 
-            if len(config_wig_wag_groups) == 2 and len(config_wig_wag_groups[0]) > 0 and len(config_wig_wag_groups[1]):
-                self.wigwag_groups = config_wig_wag_groups
-        except:
-            pass
+        config_wig_wag_groups = plugin_config.get('WIGWAG_GROUPS', None)
+        if config_wig_wag_groups is not None and len(config_wig_wag_groups) == 2 \
+                and len(config_wig_wag_groups[0]) > 0 and len(config_wig_wag_groups[1]):
+            self.wigwag_groups = config_wig_wag_groups
 
         if self.slow_pulse_lights is None:
             self.slow_pulse_lights = self.all_lights
@@ -86,7 +84,7 @@ class LightBot(Plugin):
         print dumps(data)
 
         is_wootric_bot = ('subtype' in data and data['subtype'] == 'bot_message'
-                        and 'bot_id' in data and data['bot_id'] == self.wootric_bot_id)
+                          and 'bot_id' in data and data['bot_id'] == self.wootric_bot_id)
         user_impersonating_bot = self.debug and 'user' in data and data['user'] in self.allowed_light_control_user_ids
 
         light_control_regex = r"(?i)^lights?\s+(\S+.*)$"
@@ -100,7 +98,7 @@ class LightBot(Plugin):
             if match is not None:
                 light_command = match.group(1)
 
-                if light_command != None:
+                if light_command is not None:
                     self.process_lights_command(light_command, data)
 
         # NPS scores
@@ -111,6 +109,8 @@ class LightBot(Plugin):
                 match = pattern.match(data['text'])
             elif is_wootric_bot and 'attachments' in data:
                 match = pattern.match(data['attachments'][0]['text'])
+            else:
+                match = None
 
             if match is not None:
                 nps_score = match.group(1)
@@ -122,9 +122,9 @@ class LightBot(Plugin):
         pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
         match = pattern.match(args)
 
-        try:
+        if match is not None:
             target_lights = match.group(1).split()
-        except:
+        else:
             target_lights = self.allLights
 
         command = match.group(3)
@@ -163,7 +163,7 @@ class LightBot(Plugin):
             if xy is not None:
                 self.color_change(xy, target_lights)
                 return
-        except:
+        except ValueError:
             pass
 
         # Check for brightness
@@ -284,6 +284,9 @@ class LightBot(Plugin):
             else:
                 # No name, no hex
                 match = rgb_percent_pattern.match(string)
+                r = None
+                g = None
+                b = None
 
                 if match is not None:
                     r = int(match.group(1)) * 255 / 100
@@ -299,7 +302,7 @@ class LightBot(Plugin):
                         g = int(match.group(2))
                         b = int(match.group(4))
 
-                if match is not None:
+                if r is not None and g is not None and b is not None:
                     rgb = [r, g, b]
                 else:
                     # No name, no hex, no RGB percent, no RGB integers
@@ -345,7 +348,7 @@ class LightBot(Plugin):
 
             if brightness == 1:
                 brightness = 255
-            elif brightness > 0.0 and brightness < 1.0:
+            elif 0.0 < brightness < 1.0:
                 brightness = int(brightness * 255)
 
         for light in lights:
