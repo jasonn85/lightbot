@@ -33,7 +33,8 @@ class LightBot(Plugin):
         self.wootricBotID = plugin_config.get('WOOTRIC_BOT', None)
         self.wigwagColor = self.xyFromColorString(plugin_config.get('WIGWAG_COLOR', str(DEFAULT_WIGWAG_COLOR)))
         self.whirlColor = self.xyFromColorString(plugin_config.get('WHIRL_COLOR', str(DEFAULT_WHIRL_COLOR)))
-        self.slowPulseColor = self.xyFromColorString(plugin_config.get('SLOW_PULSE_COLOR', str(DEFAULT_SLOW_PULSE_COLOR)))
+        self.slowPulseColor = self.xyFromColorString(
+            plugin_config.get('SLOW_PULSE_COLOR', str(DEFAULT_SLOW_PULSE_COLOR)))
         self.slowPulseLights = plugin_config.get('SLOW_PULSE_LIGHTS', None)
 
         configLights = plugin_config.get('LIGHTS', None)
@@ -84,7 +85,8 @@ class LightBot(Plugin):
     def process_message(self, data):
         print dumps(data)
 
-        isWootricBot = 'subtype' in data and data['subtype'] == 'bot_message' and 'bot_id' in data and data['bot_id'] == self.wootricBotID
+        isWootricBot = ('subtype' in data and data['subtype'] == 'bot_message'
+                        and 'bot_id' in data and data['bot_id'] == self.wootricBotID)
         userImpersonatingBot = self.debug and 'user' in data and data['user'] in self.allowedLightControlUserIDs
 
         lightControlRegex = r"(?i)^lights?\s+(\S+.*)$"
@@ -207,7 +209,8 @@ class LightBot(Plugin):
             'text' : prettyDataString
         }]
 
-        self.slack_client.api_call('chat.postMessage', as_user=True, channel=incomingData['channel'], attachments=messageAttachments, type='message')
+        self.slack_client.api_call('chat.postMessage', as_user=True, channel=incomingData['channel'],
+                                   attachments=messageAttachments, type='message')
 
     def sceneIDMatchingString(self, sceneName):
         name = sceneName.lower()
@@ -239,12 +242,16 @@ class LightBot(Plugin):
                     'name' : 'temporarilyDisableSchedule%s' % str(scheduleID),
                     'time' : timeString,
                     'command' : {
-                        'method' : 'PUT', 'address' : '/api/' + self.bridge.username + '/schedules/' + str(scheduleID), 'body' : {'status' : 'enabled'}
+                        'method' : 'PUT',
+                        'address' : '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
+                        'body' : {'status' : 'enabled'}
                     }
                 }
 
-                result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/schedules/' + str(scheduleID), dumps({'status' : 'disabled'}))
-                self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(reenableScheduleSchedule))
+                result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/schedules/' + str(scheduleID),
+                                             dumps({'status' : 'disabled'}))
+                self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
+                                    dumps(reenableScheduleSchedule))
 
                 print result
 
@@ -433,22 +440,31 @@ class LightBot(Plugin):
 
         # First phase
         for lightId in self.wigwagGroups[0]:
-            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {
+                'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime
+            })
         for lightId in self.wigwagGroups[1]:
-            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-1-%d' % lightId, everyTwoSeconds, lightId, {
+                'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime
+            })
 
         # Delay before setting second phase
         time.sleep(secondsBetweenPhases)
 
         # Second phase
         for lightId in self.wigwagGroups[0]:
-            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {
+                'xy' : self.wigwagColor, 'bri' : 0, 'transitiontime' : transitionTime
+            })
         for lightId in self.wigwagGroups[1]:
-            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime})
+            self.bridge.create_schedule('wigwag-2-%d' % lightId, everyTwoSeconds, lightId, {
+                'xy' : self.wigwagColor, 'bri' : 154, 'transitiontime' : transitionTime
+            })
 
         # Restore original state
         for lightId in allWigwagLights:
-            result = self.bridge.create_schedule('wigwag-3-%d' % lightId, afterItsOver, lightId, startingStatus[lightId])
+            result = self.bridge.create_schedule('wigwag-3-%d' % lightId, afterItsOver, lightId,
+                                                 startingStatus[lightId])
 
             if self.debug:
                 print "Setting light %d to restore state to:\n" % lightId
@@ -487,7 +503,8 @@ class LightBot(Plugin):
         # More than seven lights would require multiple rules in the Bridge since we are limited to 8 actions per rule.
         # This would be relatively straight forward to solve but is not worth the effort at the moment.
         if len(lights) > 6:
-            print '%d lights are specified to pulsate.  Only pulsating up to 6 is currently supported.  List will be truncated to 6.' % len(lights)
+            print '%d lights are specified to pulsate.  Only pulsating up to 6 is currently supported.' \
+                + 'List will be truncated to 6.' % len(lights)
             lights = lights[:6]
 
         pulseBri = 88
@@ -573,9 +590,11 @@ class LightBot(Plugin):
             }
         }
 
-        goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(goingUpSchedule))
+        goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
+                                            dumps(goingUpSchedule))
         goingUpScheduleID = goingUpResult[0]['success']['id']
-        goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(goingDownSchedule))
+        goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules',
+                                              dumps(goingDownSchedule))
         goingDownScheduleID = goingDownResult[0]['success']['id']
 
         # Create the two rules for going up and down
@@ -668,11 +687,14 @@ class LightBot(Plugin):
                 'body' : startingStatus[lightID]
             })
 
-        goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(startGoingUpRule))
+        goingUpResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
+                                            dumps(startGoingUpRule))
         goingUpRuleID = goingUpResult[0]['success']['id']
-        goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(startGoingDownRule))
+        goingDownResult = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
+                                              dumps(startGoingDownRule))
         goingDownRuleID = goingDownResult[0]['success']['id']
-        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules', dumps(originalLightStateRule))
+        result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
+                                     dumps(originalLightStateRule))
 
         cleanupRule = {
             'name' : 'Pulsation clean up',
@@ -735,7 +757,8 @@ class LightBot(Plugin):
         }
         for lightID in lights:
             light = self.bridge.lights_by_id[lightID]
-            result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/lights/' + str(lightID) + '/state', dumps(lightsTotallyOff))
+            result = self.bridge.request('PUT', '/api/' + self.bridge.username + '/lights/' + str(lightID) + '/state',
+                                         dumps(lightsTotallyOff))
             print result
 
         # Start the pulsation once that is done
@@ -775,7 +798,8 @@ class LightBot(Plugin):
 
         # Return to original state after we're done
         for lightId in lights:
-            self.bridge.create_schedule('restore%dAfterWhirl' % lightId, finishedTimestamp, lightId, startingStatus[lightId])
+            self.bridge.create_schedule('restore%dAfterWhirl' % lightId, finishedTimestamp, lightId,
+                                        startingStatus[lightId])
 
         # Build our 'off' states to go with the on state
         offStates = {}
