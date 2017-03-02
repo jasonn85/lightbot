@@ -96,7 +96,7 @@ class LightBot(Plugin):
             pattern = re.compile(lightControlRegex)
             match = pattern.match(data['text'])
 
-            if match != None:
+            if match is not None:
                 lightCommand = match.group(1)
 
                 if lightCommand != None:
@@ -111,10 +111,10 @@ class LightBot(Plugin):
             elif isWootricBot and 'attachments' in data:
                 match = pattern.match(data['attachments'][0]['text'])
 
-            if match != None:
+            if match is not None:
                 npsScore = match.group(1)
 
-                if npsScore != None:
+                if npsScore is not None:
                     self.processNPSScore(npsScore)
 
     def processLightsCommand(self, args, data=None):
@@ -179,7 +179,7 @@ class LightBot(Plugin):
         # Check for a scene after updating Hue API
         sceneID = self.sceneIDMatchingString(command)
 
-        if sceneID != None:
+        if sceneID is not None:
             self.bridge.activate_scene(0, sceneID)
             return
 
