@@ -1,6 +1,7 @@
 import time
 import re
 import random
+import itertools
 from copy import deepcopy
 from json import dumps
 from math import ceil
@@ -803,27 +804,28 @@ class LightBot(Plugin):
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(begin_schedule))
 
     def blue_whirl(self):
-        lights = self.all_lights
         starting_status = {}
 
-        for light in lights:
-            state = self.bridge.get_light(int(light))['state']
+        # Flatten our array of arrays of light IDs to save the starting states
+        flattened_whirl_light_ids = list(itertools.chain.from_iterable(self.whirl_lights))
+        for light_id in flattened_whirl_light_ids:
+            state = self.bridge.get_light(int(light_id))['state']
 
             if state is not None:
-                starting_status[light] = self.restorable_state_for_light(state)
+                starting_status[light_id] = self.restorable_state_for_light(state)
 
         step_time = 0.075
         time_between_whirls = 0.5
         transition_time = 1
         whirl_count = 10
 
-        total_seconds = ((step_time * 4) + time_between_whirls) * whirl_count
+        total_seconds = ((step_time * len(self.whirl_lights)) + time_between_whirls) * whirl_count
         finished_timestamp = 'PT00:00:%02d' % total_seconds
 
         self.disable_schedules_for_time(total_seconds)
 
         # Return to original state after we're done
-        for light_id in lights:
+        for light_id in flattened_whirl_light_ids:
             self.bridge.create_schedule('restore%dAfterWhirl' % light_id, finished_timestamp, light_id,
                                         starting_status[light_id])
 
@@ -834,25 +836,28 @@ class LightBot(Plugin):
             state = deepcopy(status)
             del state['on']
             if not status['on']:
-                state['bri'] = 1
+                state['bri'] = 0
 
             off_states[light_id] = state
 
-        for i in range(0,whirl_count):
-            on_state = {'xy': self.whirl_color, 'bri': 255, 'transitiontime': transition_time}
+        # New hotness:
+        on_state = {'xy': self.whirl_color, 'bri': 255, 'transitiontime': transition_time}
+        on_state_plus_on = on_state.copy()
+        on_state_plus_on['on'] = True
 
-            if i == 0:
-                # The first time through, we need to make sure we set 'on' to True if necessary
-                on_state['on'] = True
+        for whirl_index in range(0,whirl_count):
+            for group_index in range(0,len(self.whirl_lights)+2):
+                coming_down_index = group_index - 2
 
-            self.bridge.set_light(3, on_state)
-            time.sleep(step_time)
-            self.bridge.set_light(4, on_state)
-            time.sleep(step_time)
-            self.bridge.set_light(3, off_states[3])
-            self.bridge.set_light(5, on_state)
-            time.sleep(step_time)
-            self.bridge.set_light(4, off_states[4])
-            time.sleep(step_time)
-            self.bridge.set_light(5, off_states[5])
+                if group_index < len(self.whirl_lights):
+                    state = on_state if whirl_index != 0 else on_state_plus_on
+                    for light_id in self.whirl_lights[group_index]:
+                        self.bridge.set_light(light_id, state)
+
+                if coming_down_index >= 0:
+                    for light_id in self.whirl_lights[coming_down_index]:
+                        self.bridge.set_light(light_id, off_states[light_id])
+
+                time.sleep(step_time)
+
             time.sleep(time_between_whirls)
