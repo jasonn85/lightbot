@@ -460,12 +460,12 @@ class LightBot(Plugin):
 
         # Second phase
         for light_id in self.wigwag_groups[0]:
-            self.bridge.create_schedule('wigwag-2-%d' % light_id, everyTwoSeconds, light_id, {
-                'xy': self.wigwag_color, 'bri': 0, 'transitiontime': transitionTime
+            self.bridge.create_schedule('wigwag-2-%d' % light_id, every_two_seconds, light_id, {
+                'xy': self.wigwag_color, 'bri': 0, 'transitiontime': transition_time
             })
         for light_id in self.wigwag_groups[1]:
-            self.bridge.create_schedule('wigwag-2-%d' % light_id, everyTwoSeconds, light_id, {
-                'xy': self.wigwag_color, 'bri': 154, 'transitiontime': transitionTime
+            self.bridge.create_schedule('wigwag-2-%d' % light_id, every_two_seconds, light_id, {
+                'xy': self.wigwag_color, 'bri': 154, 'transitiontime': transition_time
             })
 
         # Restore original state
