@@ -583,7 +583,7 @@ class LightBot(Plugin):
             'modelid': 'PulsationStatusSensor'
         }
 
-        # Create the sensors used for status (replacing it if it already exists with the same uniqueid)
+        # Create the sensors used for status
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/sensors', dumps(pulsation_status_sensor))
         status_sensor_id = result[0]['success']['id']
         pulsation_state_address = '/sensors/' + str(status_sensor_id) + '/state'
