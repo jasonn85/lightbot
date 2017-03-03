@@ -18,9 +18,6 @@ outputs = []
 
 
 class LightBot(Plugin):
-    allowed_light_control_channel_i_ds = []
-    allowed_light_control_user_i_ds = []
-
     # Which lights should be targeted if no light specifying parameter is provided?
     all_lights = [0]
 
