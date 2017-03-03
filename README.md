@@ -124,6 +124,7 @@ The lights to be used for whirling.  Defaults to LIGHTS (in singular order) or a
 	- 3
 	- 4
 ```
+```YAML
 # Lights 1+2 and 3+4 will animate together as a group
   - WHIRL_LIGHTS:
     -
