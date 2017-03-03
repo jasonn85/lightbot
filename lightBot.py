@@ -14,6 +14,10 @@ DEFAULT_WIGWAG_COLOR = [0.1576, 0.2368]
 DEFAULT_WHIRL_COLOR = [0.1576, 0.2368]
 DEFAULT_SLOW_PULSE_COLOR = [0.7, 0.2986]
 
+PULSATION_SENSOR_STATE_GOING_UP = 1
+PULSATION_SENSOR_STATE_GOING_DOWN = 2
+PULSATION_SENSOR_STATE_CLEANUP = 3
+
 outputs = []
 
 
@@ -598,7 +602,7 @@ class LightBot(Plugin):
                 'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
-                    'status': 2
+                    'status': PULSATION_SENSOR_STATE_GOING_DOWN
                 }
             }
         }
@@ -612,7 +616,7 @@ class LightBot(Plugin):
                 'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
-                    'status': 1
+                    'status': PULSATION_SENSOR_STATE_GOING_UP
                 }
             }
         }
@@ -631,7 +635,7 @@ class LightBot(Plugin):
                 {
                     'address': pulsation_state_address + '/status',
                     'operator': 'eq',
-                    'value': '1'
+                    'value': str(PULSATION_SENSOR_STATE_GOING_UP)
                 },
                 {
                     'address': pulsation_state_address + '/lastupdated',
@@ -658,7 +662,7 @@ class LightBot(Plugin):
                 {
                     'address': pulsation_state_address + '/status',
                     'operator': 'eq',
-                    'value': '2'
+                    'value': str(PULSATION_SENSOR_STATE_GOING_DOWN)
                 },
                 {
                     'address': pulsation_state_address + '/lastupdated',
@@ -685,7 +689,7 @@ class LightBot(Plugin):
                 {
                     'address': pulsation_state_address + '/status',
                     'operator': 'eq',
-                    'value': '3'
+                    'value': str(PULSATION_SENSOR_STATE_CLEANUP)
                 },
                 {
                     'address': pulsation_state_address + '/lastupdated',
@@ -729,7 +733,7 @@ class LightBot(Plugin):
                 {
                     'address': pulsation_state_address + '/status',
                     'operator': 'eq',
-                    'value': '3'
+                    'value': str(PULSATION_SENSOR_STATE_CLEANUP)
                 },
                 {
                     'address': pulsation_state_address + '/lastupdated',
@@ -770,7 +774,7 @@ class LightBot(Plugin):
                 'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
-                    'status': 3
+                    'status': PULSATION_SENSOR_STATE_CLEANUP
                 }
             }
         }
@@ -796,7 +800,7 @@ class LightBot(Plugin):
                 'address': '/api/' + self.bridge.username + pulsation_state_address,
                 'method': 'PUT',
                 'body': {
-                    'status': 1
+                    'status': PULSATION_SENSOR_STATE_GOING_UP
                 }
             }
         }
