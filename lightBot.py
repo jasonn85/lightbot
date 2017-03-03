@@ -171,7 +171,7 @@ class LightBot(Plugin):
             return
 
         if command.lower() == 'dance party':
-            self.danceParty(target_lights)
+            self.dance_party(target_lights)
             return
 
         # Check for a color
