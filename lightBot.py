@@ -378,10 +378,13 @@ class LightBot(Plugin):
 
     def message_allows_light_control(self, data):
         # Is this person in one of our full control channels?
-        if 'channel' in data and data['channel'] in self.allowed_light_control_channel_ids:
-            return True
+        if 'channel' in data:
+            if (self.allowed_light_control_channel_ids is None
+                    or data['channel'] in self.allowed_light_control_channel_ids):
+                return True
         if 'user' in data and data['user'] in self.allowed_light_control_user_ids:
             return True
+
         return False
 
     def process_nps_score(self, score):
