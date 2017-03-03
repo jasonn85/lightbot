@@ -16,7 +16,7 @@ Lightbot
 ## Configuration options
 
 ### Colors
-Options for colors accept strings in any of the following formats:
+Configuration options for colors accept strings in any of the following formats:
 * [CSS3 color name](http://www.w3.org/TR/css3-color/#svg-color), such as "purple" or "sandybrown"
 * Hex color codes, including "#FFFFFF" "#FFF" "123456"
 * RGB colors as numbers 0-255
@@ -26,6 +26,26 @@ Options for colors accept strings in any of the following formats:
 ### USERS
 ### WOOTRIC_BOT
 ### LIGHTS
+### Color Whirl Options
+#### WHIRL_COLOR
+The color to be used for the whirl effect.  Defaults to light blue.
+#### WHIRL_LIGHTS
+The lights to be used for whirling.  Can be an array of light IDs or an array of arrays of light IDs.  An array of arrays of lights will animate as groups.
+```YAML
+  - WHIRL_LIGHTS:
+    - 1
+	- 3
+	- 4
+```
+```YAML
+  - WHIRL_LIGHTS:
+    -
+	  - 1
+	  - 2
+	-
+	  - 3
+	  - 4
+```
 ### Wigwag Options
 #### WIGWAG_GROUPS
 Lights can be separated into two groups for wig wag animations:
