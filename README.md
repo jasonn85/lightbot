@@ -87,17 +87,20 @@ Configuration options for colors accept strings in any of the following formats:
 
 ### CHANNELS
 Optional list of Slack channel IDs in which any user can control the lights.  Default allows light control from any channel the bot inhabits.
+
 ### USERS
 Optional list of users that can directly send light commands and can use light commands from absolutely any channel.
 ```YAML
   USERS:
     - U1234567 # Jason
 ```
+
 ### WOOTRIC_BOT
 The bot ID of the Wootric NPS score bot.
 ```YAML
   WOOTRIC_BOT: "B12AB34F"
 ```
+
 ### LIGHTS
 The light IDs to be used for non-specific light chat commands.  Note that lights outside of this list can still be used manually, e.g. `light 3 red`.  Defaults to all lights on the Hue Bridge.
 ```YAML
@@ -106,6 +109,7 @@ The light IDs to be used for non-specific light chat commands.  Note that lights
     - 2
     - 3
 ```
+
 ### Color Whirl Options
 #### WHIRL_COLOR
 The color to be used for the whirl effect.  Defaults to light blue.
@@ -120,6 +124,15 @@ The lights to be used for whirling.  Defaults to LIGHTS (in singular order) or a
 	- 3
 	- 4
 ```
+# Lights 1+2 and 3+4 will animate together as a group
+  - WHIRL_LIGHTS:
+    -
+	  - 1
+	  - 2
+	-
+	  - 3
+	  - 4
+```
 ```YAML
 # Lights 1+2 and 3+4 will animate together as a group
   - WHIRL_LIGHTS:
@@ -130,6 +143,7 @@ The lights to be used for whirling.  Defaults to LIGHTS (in singular order) or a
 	  - 3
 	  - 4
 ```
+
 ### Wigwag Options
 #### WIGWAG_GROUPS
 Lights can be separated into two groups for wig wag animations:
@@ -142,17 +156,20 @@ Lights can be separated into two groups for wig wag animations:
 	  - 2
 	  - 4
 ```
+
 #### WIGWAG_COLOR
 The color to use for wigwag animations.  See #Colors above for acceptable formats.  Defaults to a light blue.
 ```YAML
   - WIGWAG_COLOR: white
 ```
+
 ### Slow Pulse Options
 #### SLOW_PULSE_COLOR
 The color to use for slow pulsation.  Defaults to dark red.
 ```YAML
   - SLOW_PULSE_COLOR: #440000
 ```
+
 #### SLOW_PULSE_LIGHTS
 The lights to use for slow pulsation.  Defaults to the LIGHTS option if it is the only value specified, otherwise all lights on the Hue bridge.
 ```YAML
