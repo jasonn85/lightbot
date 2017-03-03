@@ -155,7 +155,7 @@ class LightBot(Plugin):
             return
 
         if command.lower() == 'whirl':
-            self.blue_whirl()
+            self.whirl()
             return
 
         if command.lower() == 'wigwag':
@@ -386,7 +386,7 @@ class LightBot(Plugin):
 
     def process_nps_score(self, score):
         if score == '10':
-            self.blue_whirl()
+            self.whirl()
         elif score == '9':
             self.wigwag()
         elif score == '0':
@@ -803,7 +803,7 @@ class LightBot(Plugin):
 
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/schedules', dumps(begin_schedule))
 
-    def blue_whirl(self):
+    def whirl(self):
         starting_status = {}
 
         # Flatten our array of arrays of light IDs to save the starting states
