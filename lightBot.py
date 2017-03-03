@@ -63,6 +63,8 @@ class LightBot(Plugin):
         if config_wig_wag_groups is not None and len(config_wig_wag_groups) == 2 \
                 and len(config_wig_wag_groups[0]) > 0 and len(config_wig_wag_groups[1]):
             self.wigwag_groups = config_wig_wag_groups
+        else:
+            self.wigwag_groups = None
 
         if self.slow_pulse_lights is None:
             self.slow_pulse_lights = self.all_lights
@@ -122,10 +124,10 @@ class LightBot(Plugin):
         pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
         match = pattern.match(args)
 
-        if match is not None:
+        if match is not None and match.group(1) is not None:
             target_lights = match.group(1).split()
         else:
-            target_lights = self.allLights
+            target_lights = self.all_lights
 
         command = match.group(3)
 
@@ -317,7 +319,8 @@ class LightBot(Plugin):
 
         return xy
 
-    def rgb_to_xy(self, rgb):
+    @staticmethod
+    def rgb_to_xy(rgb):
         # Some magic number witchcraft to go from rgb 255 to Philips XY
         # from http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
         red = rgb[0] / 255.0
@@ -401,7 +404,8 @@ class LightBot(Plugin):
         for light in lights:
             self.bridge.set_light(int(light), starting_status[light])
 
-    def restorable_state_for_light(self, light_object):
+    @staticmethod
+    def restorable_state_for_light(light_object):
         state = {'bri': light_object['bri'], 'on': light_object['on']}
 
         if light_object['colormode'] == 'hs':
@@ -506,8 +510,9 @@ class LightBot(Plugin):
         # More than seven lights would require multiple rules in the Bridge since we are limited to 8 actions per rule.
         # This would be relatively straight forward to solve but is not worth the effort at the moment.
         if len(lights) > 6:
-            print '%d lights are specified to pulsate.  Only pulsating up to 6 is currently supported.' \
-                + 'List will be truncated to 6.' % len(lights)
+            print '%d lights are specified to pulsate.' % len(lights)\
+                 + 'Only pulsating up to 6 is currently supported.' \
+                 + 'List will be truncated to 6.'
             lights = lights[:6]
 
         pulse_bri = 88
@@ -692,10 +697,10 @@ class LightBot(Plugin):
 
         going_up_result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
                                               dumps(start_going_up_rule))
-        going_up_rule_id = goingUpResult[0]['success']['id']
+        going_up_rule_id = going_up_result[0]['success']['id']
         going_down_result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
                                                 dumps(start_going_down_rule))
-        going_down_rule_id = goingDownResult[0]['success']['id']
+        going_down_rule_id = going_down_result[0]['success']['id']
         result = self.bridge.request('POST', '/api/' + self.bridge.username + '/rules',
                                      dumps(original_light_state_rule))
 
