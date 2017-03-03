@@ -10,23 +10,47 @@ Control your lights and party like it's 1988 in IRC.
 > All light commands will work on all configured lights unless specified in the command.
 
 ### Lights on/off
-`lights on`
-`light 5 off`
+```
+lights on
+```
+```
+light 5 off
+```
 ### Brightness
 Accepts percentages as either xx% or decimal.
-`lights brightness 60%`
-`light 3 bri 0.6`
+```
+lights brightness 60%
+```
+```
+light 3 bri 0.6
+```
 ### Colors
 Colors can be [CSS3 color names](http://www.w3.org/TR/css3-color/#svg-color), RGB values 0-255, RGB percents, hex values, or XY chromaticity values.
-`lights forestgreen`
-`light 10 #FF0000`
-`lights 1 2 3 (255, 255, 255)`
-`lights [0.1576, 0.2368]`
+```
+lights forestgreen
+```
+```
+light 10 #FF0000
+```
+```
+lights 1 2 3 (255, 255, 255)
+```
+```
+lights [0.1576, 0.2368]
+```
 ### Animations
-`light 3 dance party`
-`lights whirl`
-`lights pulsate`
-`lights wigwag`
+```
+light 3 dance party
+```
+```
+lights whirl
+```
+```
+lights pulsate
+```
+```
+lights wigwag
+```
 
 ## NPS score triggers
 Lightbot currently supports NPS scores as reported by a [Wootric Slack bot](http://help.wootric.com/knowledge_base/topics/how-do-i-post-my-wootric-responses-to-slack).  This can be extended to include other sources of NPS scores in the future.
