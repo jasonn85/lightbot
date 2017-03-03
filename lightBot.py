@@ -69,6 +69,24 @@ class LightBot(Plugin):
         if self.slow_pulse_lights is None:
             self.slow_pulse_lights = self.all_lights
 
+        # Check for whirl lights, either as an array of IDs or an array of arrays of IDs.
+        config_whirl_lights = plugin_config.get('WHIRL_LIGHTS', None)
+        self.whirl_lights = []
+
+        if config_whirl_lights is None:
+            # Default to all lights
+            for light_id in self.all_lights:
+                # Put each light ID into an array since whirl_lights is an array of arrays of IDs.
+                self.whirl_lights.append([light_id])
+        else:
+            for whirl_group in config_whirl_lights:
+                if isinstance(whirl_group, list):
+                    # The user gave us an array of arrays, just what we wanted! :x
+                    self.whirl_lights.append(whirl_group)
+                elif whirl_group is not None:
+                    # It's not an array and not None.  This is probably a single light ID scalar.
+                    self.whirl_lights.append([whirl_group])
+
         if self.wigwag_groups is None:
             # We do not have configuration-specified wig wag groups.  Use all odd and even lights.
             even_lights = []
