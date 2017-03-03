@@ -84,6 +84,7 @@ Configuration options for colors accept strings in any of the following formats:
 * RGB colors as numbers 0-255
 * RGB colors as percents, 0%-100%
 * XY chromaticity values as specified in the [Philips Hue spec](https://www.developers.meethue.com/documentation/core-concepts)
+
 ### CHANNELS
 Optional list of Slack channel IDs in which any user can control the lights.  Default allows light control from any channel the bot inhabits.
 ### USERS
