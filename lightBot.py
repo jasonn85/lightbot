@@ -137,7 +137,7 @@ class LightBot(Plugin):
             if match is not None:
                 nps_score = match.group(1)
 
-                if npsScore is not None:
+                if nps_score is not None:
                     self.process_nps_score(nps_score)
 
     def process_lights_command(self, args, data=None):
