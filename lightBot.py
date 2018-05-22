@@ -125,20 +125,29 @@ class LightBot(Plugin):
 
         # NPS scores
         if is_wootric_bot or user_impersonating_bot:
-            pattern = re.compile(r"[*_]*New NPS rating:\s+(\d+).*")
+            nps_pattern = re.compile(r"[*_]*New NPS rating:\s+(\d+).*")
+            csat_pattern = re.compile(r"[*_]*New CSAT rating:\s+(\d+).*")
 
             if user_impersonating_bot:
-                match = pattern.match(data['text'])
+                nps_match = nps_pattern.match(data['text'])
+                csat_match = csat_pattern.match(data['text'])
             elif is_wootric_bot and 'attachments' in data:
-                match = pattern.match(data['attachments'][0]['text'])
+                nps_match = nps_pattern.match(data['attachments'][0]['text'])
+                csat_match = csat_pattern.match(data['attachments'][0]['text'])
             else:
-                match = None
+                nps_match = None
+                csat_match = None
 
-            if match is not None:
-                nps_score = match.group(1)
+            if nps_match is not None:
+                nps_score = nps_match.group(1)
 
                 if nps_score is not None:
                     self.process_nps_score(nps_score)
+            elif csat_match is not None:
+                csat_score = csat_match.group(1)
+
+                if csat_score is not None:
+                    self.process_csat_score(csat_score)
 
     def process_lights_command(self, args, data=None):
         pattern = re.compile(r"(?i)^((\d+\s+)+)?([#\S]+.*%?)$")
@@ -394,6 +403,14 @@ class LightBot(Plugin):
         elif score == '9':
             self.wigwag()
         elif score == '0':
+            self.pulsate()
+
+    def process_csat_score(self, score):
+        if score == '5':
+            self.whirl()
+        elif score == '4':
+            self.wigwag()
+        elif score == '1':
             self.pulsate()
 
     def lights_on_or_off(self, off_or_on, lights):
