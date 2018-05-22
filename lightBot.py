@@ -125,7 +125,7 @@ class LightBot(Plugin):
 
         # NPS scores
         if is_wootric_bot or user_impersonating_bot:
-            pattern = re.compile(r"New NPS rating:\s+(\d+)")
+            pattern = re.compile(r"[*_]*New NPS rating:\s+(\d+).*")
 
             if user_impersonating_bot:
                 match = pattern.match(data['text'])
